@@ -1,0 +1,113 @@
+#!/usr/bin/python3
+
+"""Explicit local management client; intentionally no generic operation flag."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import socket
+import sys
+from pathlib import Path
+from typing import Any
+
+
+def runtime_socket() -> Path:
+    runtime = os.environ.get("XDG_RUNTIME_DIR")
+    if not runtime:
+        raise RuntimeError("XDG_RUNTIME_DIR is not set")
+    return Path(runtime) / "omarchy-sidecar" / "control.sock"
+
+
+def request(operation: str, arguments: dict[str, Any]) -> Any:
+    payload = json.dumps({"op": operation, "args": arguments}, ensure_ascii=False, separators=(",", ":")).encode("utf-8") + b"\n"
+    if len(payload) > 16 * 1024:
+        raise RuntimeError("Local Sidecar request is too large")
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+        client.settimeout(3)
+        client.connect(str(runtime_socket()))
+        client.sendall(payload)
+        client.shutdown(socket.SHUT_WR)
+        chunks = bytearray()
+        while len(chunks) <= 512 * 1024:
+            part = client.recv(8192)
+            if not part:
+                break
+            chunks.extend(part)
+            if b"\n" in part:
+                break
+    response = json.loads(bytes(chunks).split(b"\n", 1)[0])
+    if not response.get("ok"):
+        raise RuntimeError(response.get("error") or "Sidecar request failed")
+    return response.get("result")
+
+
+def parse_scopes(value: str) -> list[str]:
+    return [scope for scope in value.split(",") if scope]
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Manage the local Sidecar helper")
+    sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("status")
+    sub.add_parser("pair-open")
+    sub.add_parser("pair-cancel")
+    approve = sub.add_parser("pair-approve")
+    approve.add_argument("request_id")
+    approve.add_argument("--scopes", required=True)
+    deny = sub.add_parser("pair-deny")
+    deny.add_argument("request_id")
+    capability_approve = sub.add_parser("capability-approve")
+    capability_approve.add_argument("request_id")
+    capability_deny = sub.add_parser("capability-deny")
+    capability_deny.add_argument("request_id")
+    rename = sub.add_parser("device-rename")
+    rename.add_argument("device_id")
+    rename.add_argument("name")
+    rescope = sub.add_parser("device-rescope")
+    rescope.add_argument("device_id")
+    rescope.add_argument("--scopes", required=True)
+    revoke = sub.add_parser("device-revoke")
+    revoke.add_argument("device_id")
+    pause = sub.add_parser("pause")
+    pause.add_argument("state", choices=("on", "off"))
+    sub.add_parser("diagnostics")
+    sub.add_parser("retry")
+    sub.add_parser("inbox-open")
+    sub.add_parser("shutdown")
+    args = parser.parse_args()
+    mapping: dict[str, tuple[str, dict[str, Any]]] = {
+        "status": ("status", {}), "pair-open": ("pair.open", {}), "pair-cancel": ("pair.cancel", {}),
+        "diagnostics": ("diagnostics", {}), "shutdown": ("shutdown", {}),
+        "retry": ("route.retry", {}),
+        "inbox-open": ("inbox.open", {}),
+    }
+    if args.command == "pair-approve":
+        operation = ("pair.approve", {"requestId": args.request_id, "scopes": parse_scopes(args.scopes)})
+    elif args.command == "pair-deny":
+        operation = ("pair.deny", {"requestId": args.request_id})
+    elif args.command == "capability-approve":
+        operation = ("capability.approve", {"requestId": args.request_id})
+    elif args.command == "capability-deny":
+        operation = ("capability.deny", {"requestId": args.request_id})
+    elif args.command == "device-rename":
+        operation = ("device.rename", {"deviceId": args.device_id, "name": args.name})
+    elif args.command == "device-rescope":
+        operation = ("device.rescope", {"deviceId": args.device_id, "scopes": parse_scopes(args.scopes)})
+    elif args.command == "device-revoke":
+        operation = ("device.revoke", {"deviceId": args.device_id})
+    elif args.command == "pause":
+        operation = ("pause.set", {"paused": args.state == "on"})
+    else:
+        operation = mapping[args.command]
+    print(json.dumps(request(*operation), ensure_ascii=False, separators=(",", ":")))
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as error:
+        print(str(error), file=sys.stderr)
+        raise SystemExit(1)

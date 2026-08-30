@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.mtolhuys.sidecar",
+  "name": "Sidecar",
+  "version": "0.2.1",
+  "author": "Maarten Tolhuijs",
+  "description": "A private Omarchy desktop companion for your phone.",
+  "kinds": [
+    "service",
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "service": "service/v1011/Service.qml",
+    "barWidget": "bar-widget/v1011/BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Sidecar",
+    "description": "Reach your private Omarchy Portal and Morph themes",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

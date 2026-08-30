@@ -1,0 +1,17 @@
+#!/usr/bin/python3
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+# Omarchy watches the installed plugin tree for source changes. Runtime bytecode
+# there would look like an update and can trigger a reload loop.
+sys.dont_write_bytecode = True
+
+PLUGIN_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PLUGIN_ROOT))
+
+from sidecar.app import main
+
+raise SystemExit(main())

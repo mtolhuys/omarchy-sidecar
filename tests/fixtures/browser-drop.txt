@@ -1,0 +1,1 @@
+Sidecar Drop browser verification fixture.

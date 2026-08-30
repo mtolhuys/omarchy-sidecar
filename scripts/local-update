@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly plugin_id="io.github.mtolhuys.sidecar"
+project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+readonly project_root
+readonly artifact="$project_root/dist/omarchy-sidecar-0.2.1.tar.gz"
+readonly checksum="$artifact.sha256"
+readonly plugins_dir="${HOME:?HOME is required}/.config/omarchy/plugins"
+readonly plugin_dir="$plugins_dir/$plugin_id"
+readonly cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy-sidecar"
+readonly local_remote="$cache_root/local-plugin.git"
+readonly omarchy_bin="${OMARCHY_BIN:-omarchy}"
+
+fail() {
+  printf 'local-update: %s\n' "$*" >&2
+  exit 1
+}
+
+[[ $(id -u) -ne 0 ]] || fail "refusing to install a desktop plugin as root"
+
+for command_name in git python3 sha256sum tar "$omarchy_bin"; do
+  command -v "$command_name" >/dev/null 2>&1 || fail "required command not found: $command_name"
+done
+
+[[ -f $artifact && -f $checksum ]] ||
+  fail "release artifact is missing; run 'make dist' first"
+(cd -- "$project_root" && sha256sum -c "dist/$(basename -- "$checksum")")
+
+if [[ -e $plugin_dir || -L $plugin_dir ]]; then
+  [[ -d $plugin_dir && ! -L $plugin_dir && -d $plugin_dir/.git ]] ||
+    fail "existing plugin is not a Git-managed installation: $plugin_dir"
+  [[ -f $plugin_dir/manifest.json ]] || fail "installed manifest is missing"
+  installed_id=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' \
+    "$plugin_dir/manifest.json")
+  [[ $installed_id == "$plugin_id" ]] ||
+    fail "installed manifest has unexpected id: $installed_id"
+  installed=true
+else
+  installed=false
+fi
+
+mkdir -p -- "$cache_root"
+if [[ -e $local_remote ]]; then
+  [[ -d $local_remote && -f $local_remote/HEAD && -d $local_remote/objects ]] ||
+    fail "local remote path exists but is not a bare Git repository: $local_remote"
+else
+  git init --bare -q "$local_remote"
+fi
+
+work_root=$(mktemp -d "${TMPDIR:-/tmp}/sidecar-local-update.XXXXXX")
+trap 'rm -rf -- "$work_root"' EXIT
+work_repo="$work_root/plugin"
+
+if [[ $installed == true ]]; then
+  git clone -q --no-hardlinks "$plugin_dir" "$work_repo"
+else
+  git init -q "$work_repo"
+fi
+
+git -C "$work_repo" rm -r -q --ignore-unmatch .
+git -C "$work_repo" clean -fdx -q
+tar -xzf "$artifact" --strip-components=1 -C "$work_repo"
+git -C "$work_repo" add -A
+
+if ! git -C "$work_repo" diff --cached --quiet; then
+  git -C "$work_repo" \
+    -c user.name=Sidecar \
+    -c user.email=local@sidecar.invalid \
+    commit -qm "Local Sidecar artifact"
+fi
+
+git -C "$work_repo" push -q --force "$local_remote" HEAD:refs/heads/main
+git --git-dir="$local_remote" symbolic-ref HEAD refs/heads/main
+
+if [[ $installed == true ]]; then
+  git -C "$plugin_dir" remote set-url origin "$local_remote"
+  "$omarchy_bin" plugin update "$plugin_id" --yes
+else
+  "$omarchy_bin" plugin add "$local_remote" --enable --yes
+fi
+
+cmp -s "$work_repo/manifest.json" "$plugin_dir/manifest.json" ||
+  fail "installed manifest does not match the current artifact"
+
+for entry_point in \
+  service/v1011/Service.qml \
+  bar-widget/v1011/BarWidget.qml \
+  helper/sidecard \
+  web/dist/app.v1011.js; do
+  [[ -f $plugin_dir/$entry_point ]] || fail "installed graph is missing $entry_point"
+done
+
+printf 'Updated %s from the current artifact.\n' "$plugin_id"
+printf 'Local update remote: %s\n' "$local_remote"

@@ -1,0 +1,27 @@
+{
+  "id": "/app/",
+  "name": "Omarchy Sidecar Portal",
+  "short_name": "Sidecar",
+  "description": "A private Omarchy desktop companion for your phone.",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "background_color": "#18181b",
+  "theme_color": "#18181b",
+  "orientation": "any",
+  "share_target": {
+    "action": "/app/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [{
+        "name": "files",
+        "accept": ["image/png", ".png", "image/jpeg", ".jpg", ".jpeg", "image/webp", ".webp", "image/gif", ".gif", "application/pdf", ".pdf", "text/plain", ".txt"]
+      }]
+    }
+  },
+  "icons": [
+    {"src": "/app/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "/app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

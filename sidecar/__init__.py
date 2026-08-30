@@ -1,0 +1,1 @@
+"""Omarchy Sidecar helper package."""

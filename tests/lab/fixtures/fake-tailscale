@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -euo pipefail
+
+printf '%q ' "$@" >>/tmp/sidecar-fake-tailscale.log
+printf '\n' >>/tmp/sidecar-fake-tailscale.log
+
+if [[ ${1:-} == status && ${2:-} == --json ]]; then
+  printf '%s\n' '{"BackendState":"Running","Self":{"DNSName":"sidecar-lab.example.ts.net."}}'
+  exit 0
+fi
+
+if [[ ${1:-} == serve && ${2:-} == status && ${3:-} == --json ]]; then
+  if [[ -e /tmp/sidecar-fake-tailscale-conflict ]]; then
+    printf '%s\n' '{"TCP":{"4443":{"HTTPS":true},"48719":{"HTTPS":true}},"Web":{"sidecar-lab.example.ts.net:4443":{"Handlers":{"/":{"Proxy":"http://127.0.0.1:4444"}}},"sidecar-lab.example.ts.net:48719":{"Handlers":{"/":{"Proxy":"http://127.0.0.1:49999"}}}}}'
+  elif [[ -s /tmp/sidecar-fake-tailscale.pid && ! -e /tmp/sidecar-fake-tailscale-https-pending ]]; then
+    printf '%s\n' '{"TCP":{"4443":{"HTTPS":true},"48719":{"HTTPS":true}},"Web":{"sidecar-lab.example.ts.net:4443":{"Handlers":{"/":{"Proxy":"http://127.0.0.1:4444"}}},"sidecar-lab.example.ts.net:48719":{"Handlers":{"/":{"Proxy":"http://127.0.0.1:47991"}}}}}'
+  else
+    printf '%s\n' '{"TCP":{"4443":{"HTTPS":true}},"Web":{"sidecar-lab.example.ts.net:4443":{"Handlers":{"/":{"Proxy":"http://127.0.0.1:4444"}}}}}'
+  fi
+  exit 0
+fi
+
+if [[ ${1:-} == serve && ${2:-} == --yes && ${3:-} == --https=48719 && ${4:-} == http://127.0.0.1:47991 ]]; then
+  printf '%s\n' "$$" >/tmp/sidecar-fake-tailscale.pid
+  trap 'rm -f /tmp/sidecar-fake-tailscale.pid; exit 0' TERM INT EXIT
+  if [[ -e /tmp/sidecar-fake-tailscale-https-pending ]]; then
+    printf '%s\n' 'HTTPS certificates require approval in Tailscale Admin.'
+  fi
+  while :; do sleep 1; done
+fi
+
+printf 'unexpected fake tailscale invocation\n' >&2
+exit 64

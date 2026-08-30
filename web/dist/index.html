@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111116">
+  <meta name="color-scheme" content="dark light">
+  <title>Sidecar Portal</title>
+  <link rel="manifest" href="/app/manifest.webmanifest">
+  <link rel="icon" href="/app/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/app/app.v1011.css">
+</head>
+<body>
+  <div id="app" data-state="starting" data-view="portal">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <button id="connection-orb" class="brand-mark connection-orb" aria-label="Open connection and phone settings" aria-expanded="false">
+          <span class="connection-phone" aria-hidden="true"><span id="connection-dot"></span></span>
+        </button>
+        <div class="connection-copy">
+          <p class="eyebrow">Sidecar</p>
+          <h1 id="connection-title">Finding your desktop</h1>
+        </div>
+      </div>
+      <button id="drop-open" class="drop-open" aria-label="Send files to Sidecar Inbox">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m0 0L7 8m5-5 5 5M5 13v6h14v-6"/></svg><span>Drop</span>
+      </button>
+    </header>
+
+    <div id="live-status" class="sr-only" aria-live="polite"></div>
+    <section id="status-banner" class="status-banner" hidden></section>
+    <div id="toast" class="toast" role="status" hidden></div>
+
+    <main>
+      <section id="onboarding" class="onboarding glass-card" hidden>
+        <div class="onboarding-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div id="name-step">
+          <p class="card-kicker">A small hello</p>
+          <h2>Name this phone</h2>
+          <p>Give it a name you will recognize on your desktop.</p>
+          <p class="trust-copy">Tailscale carries traffic privately. Desktop approval gives this phone a separate Sidecar credential and explicit scopes.</p>
+          <form id="pair-form">
+            <label for="device-name">Phone name</label>
+            <input id="device-name" name="device-name" maxlength="64" autocomplete="off" required>
+            <button class="primary" type="submit">Meet my desktop</button>
+          </form>
+        </div>
+        <div id="approval-step" hidden>
+          <p class="card-kicker">Same moment, two screens</p>
+          <h2>Match these words</h2>
+          <p id="verification-phrase" class="phrase"></p>
+          <p>Approve this phone from the Sidecar panel on your desktop.</p>
+          <div class="waiting-line" aria-hidden="true"></div>
+        </div>
+        <div id="terminal-step" hidden>
+          <p class="card-kicker">Pairing stopped</p>
+          <h2 id="terminal-title">Ask your desktop for a new code</h2>
+          <p id="terminal-message">Open Sidecar on the desktop, then scan the fresh QR code with your phone camera.</p>
+        </div>
+      </section>
+
+      <section id="portal-view" class="view portal-view" data-view="portal" aria-labelledby="portal-heading" hidden>
+        <div id="portal-overview">
+          <div class="view-heading">
+            <div><p class="card-kicker">Your desktop, in reach</p><h2 id="portal-heading">Portal</h2></div>
+            <span id="portal-count" class="quiet-pill"></span>
+          </div>
+          <div id="workspace-rail" class="workspace-rail" role="tablist" aria-label="Desktop workspaces"></div>
+          <div id="portal-stage" class="portal-stage" aria-label="Swipe to move between workspaces">
+            <div class="portal-rings" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="portal-meta"><span id="portal-workspace-label">Workspace</span><span class="swipe-hint">Swipe anywhere</span></div>
+            <div id="app-grid" class="app-grid"></div>
+            <p id="portal-empty" class="portal-empty" hidden>Nothing mapped here yet. This space is ready when you are.</p>
+          </div>
+          <div id="drop-zones" class="drop-zones" aria-label="Move app to a workspace" hidden></div>
+          <p id="portal-hint" class="gesture-hint">Tap to focus · hold and drag to move</p>
+          <section id="beam" class="beam" aria-label="Contextual Sidecar Beam" hidden></section>
+        </div>
+      </section>
+
+      <section id="morph-view" class="view morph-view" data-view="morph" aria-labelledby="morph-heading" hidden>
+        <div class="view-heading">
+          <div><p class="card-kicker">Installed moods only</p><h2 id="morph-heading">Morph</h2></div>
+          <span id="morph-status" class="quiet-pill">In sync</span>
+        </div>
+        <div class="morph-hero glass-card">
+          <img id="morph-hero-preview" class="morph-hero-preview" alt="" aria-hidden="true">
+          <div class="morph-sun" aria-hidden="true"><span></span></div>
+          <p>Current atmosphere</p>
+          <h3 id="current-theme-name">Omarchy</h3>
+          <p class="morph-copy">Swipe to browse themes already trusted by this desktop. Tap one to apply.</p>
+        </div>
+        <div id="theme-reel" class="theme-reel" aria-label="Installed Omarchy themes"></div>
+        <div class="morph-actions">
+          <button id="theme-undo" disabled><span aria-hidden="true">↶</span><span>Undo</span></button>
+          <button id="background-next"><span class="background-glyph" aria-hidden="true"></span><span>Next background</span></button>
+        </div>
+        <p class="gesture-hint">No downloads, paths, or theme editing—ever.</p>
+      </section>
+
+      <section id="locked-view" class="locked-view" hidden>
+        <div class="lock-orbit" aria-hidden="true"><span></span></div>
+        <p class="card-kicker">Quiet means private</p>
+        <h2>Your desktop is locked</h2>
+        <p>Portal, Morph, and Beams are cleared until you unlock at the desktop.</p>
+      </section>
+    </main>
+
+    <aside id="settings-sheet" class="settings-sheet" role="dialog" aria-modal="true" aria-label="Phone and connection settings" tabindex="-1" hidden>
+      <button id="settings-close" class="sheet-close" aria-label="Close settings">×</button>
+      <p class="card-kicker">This phone</p>
+      <h2>Connection</h2>
+      <div class="connection-card"><span class="connection-card-orb" aria-hidden="true"></span><div><strong id="settings-state">Connected</strong><small>Private transport · scoped access</small></div></div>
+      <section id="capability-card" class="settings-card" hidden>
+        <div><strong>Unlock the full Portal</strong><p>Ask the desktop to approve app moving, Morph, and hold-to-lock. Your existing credential stays the same.</p></div>
+        <button id="request-capabilities" class="primary compact">Ask desktop</button>
+      </section>
+      <label class="settings-card haptics-setting">
+        <strong>Haptic feedback</strong>
+        <input id="haptics-toggle" type="checkbox" aria-label="Haptic feedback" checked>
+      </label>
+      <section id="install-tip" class="install-tip settings-card" hidden>
+        <button id="dismiss-install" class="icon-button" aria-label="Dismiss install guidance">×</button>
+        <div><strong>Keep Portal close</strong><p id="install-copy">Add this page to your home screen from the browser menu.</p></div>
+      </section>
+      <section class="settings-card trust-settings">
+        <strong>Private by design</strong>
+        <p>Tailscale transports privately. This phone’s Sidecar credential and scopes authorize every action.</p>
+        <ul id="permission-list" class="permission-list"></ul>
+      </section>
+      <button id="hold-lock" class="hold-lock"><span class="hold-progress"></span><strong>Hold to lock desktop</strong><small>Sidecar can never unlock it</small></button>
+      <button id="unpair-phone" class="danger-link">Unpair this phone</button>
+    </aside>
+    <aside id="drop-sheet" class="drop-sheet" role="dialog" aria-modal="true" aria-labelledby="drop-title" tabindex="-1" hidden>
+      <button id="drop-close" class="sheet-close" aria-label="Close Drop">×</button>
+      <p class="card-kicker">Phone → desktop</p>
+      <h2 id="drop-title">Drop</h2>
+      <p id="drop-intro" class="drop-intro">Send screenshots or small documents to one fixed desktop inbox.</p>
+      <div class="drop-destination"><span aria-hidden="true">↓</span><div><strong>Sidecar Inbox</strong><small>Fixed private destination</small></div></div>
+      <input id="drop-picker" type="file" multiple accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain" hidden>
+      <button id="drop-choose" class="primary drop-choose"><span aria-hidden="true">↑</span> Choose files</button>
+      <section id="drop-selection" aria-labelledby="drop-selection-title" hidden>
+        <div class="drop-selection-heading"><strong id="drop-selection-title">Confirm this Drop</strong><span id="drop-total" class="quiet-pill"></span></div>
+        <ul id="drop-file-list" class="drop-file-list"></ul>
+      </section>
+      <div id="drop-progress" class="drop-progress" role="progressbar" aria-label="Drop upload progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><span></span></div>
+      <p id="drop-status" class="drop-status" role="status" aria-live="polite"></p>
+      <div id="drop-actions" class="drop-actions" hidden>
+        <button id="drop-cancel">Cancel</button>
+        <button id="drop-send" class="primary">Send to desktop</button>
+      </div>
+    </aside>
+    <div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+
+    <nav id="primary-nav" class="primary-nav" aria-label="Sidecar destinations" hidden>
+      <button data-nav="portal" aria-current="page">
+        <svg class="nav-icon" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="9"/><circle cx="14" cy="14" r="4"/><path d="M14 2v3M26 14h-3M14 26v-3M2 14h3"/></svg><span>Portal</span>
+      </button>
+      <button data-nav="morph">
+        <svg class="nav-icon" data-icon="palette" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 3.5C8.2 3.5 3.5 7.7 3.5 13c0 4.7 3.8 8.5 8.5 8.5h1.1c1.2 0 1.9-1.4 1.2-2.4l-.3-.5c-.7-1 .1-2.4 1.3-2.4h2.2c3.9 0 7-2.8 7-6.3 0-3.6-4.7-6.4-10.5-6.4Z"/><circle cx="9" cy="9" r="1" fill="currentColor" stroke="none"/><circle cx="14" cy="7.2" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="9.8" r="1" fill="currentColor" stroke="none"/><circle cx="8" cy="14" r="1" fill="currentColor" stroke="none"/></svg><span>Morph</span>
+      </button>
+    </nav>
+  </div>
+  <script src="/app/app.v1011.js" type="module"></script>
+</body>
+</html>
