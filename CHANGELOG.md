@@ -3,6 +3,7 @@
 ## 0.2.1 — 2026-08-30
 
 - Replaced the narrow raw-screenshot README animation with a reproducible widescreen six-scene tour of normal-camera pairing, Portal, Morph, Drop, and Sidecar's private-by-design boundary; slowed the sequence for readability and tightened the README introduction into a fast feature overview.
+- Documented Omarchy's standard install-time left/center/right topbar placement prompt; Sidecar preselects the right section while leaving the choice to the user.
 - Removed an undeclared remote volume-control action and its `pactl` command surface; Beam now exposes exactly previous, play/pause, and next as documented.
 - Losslessly cropped the Portal and Morph marketing captures to remove oversized empty viewport canvas and the small-screen browser gutter, then retuned the banner composition around the denser screenshots.
 

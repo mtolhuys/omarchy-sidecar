@@ -51,6 +51,7 @@ def assert_manifest(root: Path) -> None:
     assert manifest["kinds"] == ["service", "bar-widget"]
     assert manifest["version"] == "0.2.1", "release version drifted"
     assert manifest["author"] == "Maarten Tolhuijs", "maintainer identity drifted"
+    assert manifest["barWidget"]["defaultSection"] == "right", "install-time bar placement default drifted"
 
 
 def assert_build_path(root: Path) -> None:

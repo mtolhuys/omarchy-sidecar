@@ -50,6 +50,8 @@ Review the source, then install and enable Sidecar from its public GitHub reposi
 omarchy plugin add https://github.com/mtolhuys/omarchy-sidecar.git --enable
 ```
 
+During installation, Omarchy asks whether the Sidecar phone icon should appear in the **left**, **center**, or **right** section of the top bar. **Right** is preselected; choose whichever side fits your bar.
+
 Open the phone icon in the Omarchy bar, choose **Pair**, and scan the QR code with the normal phone camera. Keep the Tailscale phone app connected while using Sidecar.
 
 Update an installed copy with:

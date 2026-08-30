@@ -9,6 +9,7 @@ Sidecar puts a small, purpose-built Omarchy companion on a phone already connect
 - **Beam:** previous, play/pause, and next—three typed media actions, with no remote shell.
 - **Drop:** explicitly send up to five allowed screenshots or small documents to the fixed `Downloads/Sidecar` inbox after separate local approval.
 - **Pairing:** normal-camera QR flow, matching verification words, per-phone credentials, exact scopes, pause, revoke, and fail-closed lock behavior.
+- **Topbar placement:** installation asks for the left, center, or right section, with right preselected.
 
 ## Security boundary
 
