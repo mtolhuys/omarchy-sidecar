@@ -10,8 +10,8 @@
     "bar-widget"
   ],
   "entryPoints": {
-    "service": "service/v1011/Service.qml",
-    "barWidget": "bar-widget/v1011/BarWidget.qml"
+    "service": "service/v1012/Service.qml",
+    "barWidget": "bar-widget/v1012/BarWidget.qml"
   },
   "barWidget": {
     "displayName": "Sidecar",

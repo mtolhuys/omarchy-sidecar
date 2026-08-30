@@ -84,7 +84,7 @@ def assert_runtime_source(root: Path) -> None:
                 continue
             text = path.read_text(errors="strict")
             graph_ids = set(re.findall(r"v\d{4}", relative + "\n" + text))
-            assert graph_ids <= {"v1011"}, f"stale runtime graph in {relative}: {sorted(graph_ids)}"
+            assert graph_ids <= {"v1012"}, f"stale runtime graph in {relative}: {sorted(graph_ids)}"
             assert not FORBIDDEN_EXECUTABLE.search(text), f"privileged executable primitive in {relative}"
             assert not FORBIDDEN_TAILSCALE.search(text), f"forbidden Tailscale operation in {relative}"
             assert "omarchy-install-service-tailscale" not in text, f"privileged installer trigger in {relative}"
@@ -113,8 +113,8 @@ def assert_runtime_source(root: Path) -> None:
         assert not retired.exists(), f"retired Agent integration remains: {retired.relative_to(root)}"
     for relative in (
         "sidecar/app.py", "sidecar/core.py", "sidecar/server.py",
-        "service/v1011/Service.qml", "bar-widget/v1011/BarWidget.qml",
-        "web/dist/index.html", "web/dist/app.v1011.js", "web/dist/model.v1011.js", "web/dist/app.v1011.css",
+        "service/v1012/Service.qml", "bar-widget/v1012/BarWidget.qml",
+        "web/dist/index.html", "web/dist/app.v1012.js", "web/dist/model.v1012.js", "web/dist/app.v1012.css",
     ):
         text = (root / relative).read_text()
         assert not re.search(r"\b(?:carry|codex)\b", text, re.IGNORECASE), f"retired feature remains in {relative}"
@@ -128,10 +128,13 @@ def assert_runtime_source(root: Path) -> None:
     assert 'self.inbox = self.downloads / "Sidecar"' in inbox, "destination escaped the fixed inbox"
     assert 'self.staging = self.inbox / ".sidecar-staging"' in inbox
     constants = (root / "sidecar" / "constants.py").read_text()
+    for relative in ("sidecar/constants.py", "sidecar/core.py", "sidecar/adapters.py", "docs/PROTOCOL.md"):
+        assert "media.setVolume" not in (root / relative).read_text(), f"undeclared volume action remains in {relative}"
+    assert "pactl" not in (root / "sidecar" / "adapters.py").read_text(), "audio-volume command surface remains"
     for bound in ("MAX_INBOX_FILES = 5", "MAX_INBOX_FILE_BYTES = 25 * 1024 * 1024", "MAX_INBOX_BATCH_BYTES = 50 * 1024 * 1024"):
         assert bound in constants, f"Drop bound drifted: {bound}"
-    worker = (root / "web" / "dist" / "sw.v1011.js").read_text()
-    assert 'const CACHE = "sidecar-web-v1011-final"' in worker
+    worker = (root / "web" / "dist" / "sw.v1012.js").read_text()
+    assert 'const CACHE = "sidecar-web-v1012-final"' in worker
     assert 'credential' not in worker[worker.index("async function writeShare"):worker.index("async function cleanupShares")], "credential entered share persistence"
     web_manifest = json.loads((root / "web" / "dist" / "manifest.webmanifest").read_text())
     assert web_manifest["share_target"]["method"] == "POST"

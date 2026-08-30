@@ -1,6 +1,6 @@
 # Screenshot contract
 
-Repository media must come from the current `v1011` graph and contain no real credentials, QR secrets, device names, tailnet names, paths, URLs, window titles, or private desktop content.
+Repository media must come from the current `v1012` graph and contain no real credentials, QR secrets, device names, tailnet names, paths, URLs, window titles, or private desktop content.
 
 Required phone captures:
 

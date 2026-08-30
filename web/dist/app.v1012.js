@@ -3,10 +3,10 @@
 import {
   activeWorkspace, adjacentWorkspace, missingPortalScopes, reconnectDelay,
   sanitizeBeam, sanitizeTheme, sanitizeThemes, snapshotTransition, stableItemOrder,
-} from "/app/model.v1011.js";
+} from "/app/model.v1012.js";
 
 const PROTOCOL = 1;
-const WEB_BUILD = "sidecar-web-v1011";
+const WEB_BUILD = "sidecar-web-v1012";
 const DROP_SCOPE = "write:inbox";
 const DROP_POLICY = Object.freeze({
   "image/png": [".png"], "image/jpeg": [".jpg", ".jpeg"], "image/webp": [".webp"],
@@ -1383,7 +1383,7 @@ async function start() {
     const setting = await readSetting("haptics");
     if (typeof setting === "boolean") hapticsEnabled = setting;
   } catch (_) {}
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/app/sw.v1011.js", {scope: "/app/"}).catch(() => {});
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/app/sw.v1012.js", {scope: "/app/"}).catch(() => {});
   try {
     clientInstanceId = await ensureClientInstanceId();
   } catch (_) {

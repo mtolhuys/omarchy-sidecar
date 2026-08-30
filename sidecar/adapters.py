@@ -155,7 +155,7 @@ class FakeAdapter:
             {"id": "win_editor", "app": "Editor", "workspaceId": "ws_1", "focused": True},
             {"id": "win_browser", "app": "Chromium", "workspaceId": "ws_2", "focused": False},
         ]
-        self._media = {"available": True, "playing": False, "volume": 0.45, "canPrevious": True, "canNext": True}
+        self._media = {"available": True, "playing": False, "canPrevious": True, "canNext": True}
         self._themes = [
             {"id": "theme_aurora", "name": "Aurora", "previewAccent": "#8b5cf6", "previewAvailable": True},
             {"id": "theme_ember", "name": "Ember", "previewAccent": "#f97316", "previewAvailable": True},
@@ -235,9 +235,6 @@ class FakeAdapter:
                 return {"playing": self._media["playing"]}
             if action in {"media.previous", "media.next"}:
                 return {"transport": action.split(".")[1]}
-            if action == "media.setVolume":
-                self._media["volume"] = parameters["volume"]
-                return {"volume": self._media["volume"]}
             if action == "theme.set":
                 target = parameters["themeId"]
                 if not any(item["id"] == target for item in self._themes):
@@ -361,30 +358,12 @@ class OmarchyAdapter:
         except (AdapterError, json.JSONDecodeError):
             raw = {}
         available = bool(raw.get("hasPlayer"))
-        volume = self._volume()
         return {
             "available": available,
             "playing": bool(raw.get("playing")) if available else False,
-            "volume": volume,
             "canPrevious": bool(raw.get("canGoPrevious")) if available else False,
             "canNext": bool(raw.get("canGoNext")) if available else False,
         }
-
-    def _volume(self) -> float:
-        try:
-            sink_name = self._sink_name()
-            result = self._run(["pactl", "get-sink-volume", sink_name])
-            match = re.search(r"\b(\d{1,3})%", result.stdout)
-            return min(1.0, max(0.0, int(match.group(1)) / 100)) if match else 0.0
-        except (AdapterError, ValueError):
-            return 0.0
-
-    def _sink_name(self) -> str:
-        sink = self._run(["omarchy-audio-output-sink"])
-        sink_name = sink.stdout.strip()
-        if sink.returncode != 0 or not re.fullmatch(r"[A-Za-z0-9_.:@-]{1,256}", sink_name) or sink_name.startswith("-"):
-            raise AdapterError("adapter_unavailable")
-        return sink_name
 
     def _theme(self) -> dict[str, Any]:
         raw: dict[str, str] = {}
@@ -640,17 +619,6 @@ class OmarchyAdapter:
             if result.returncode != 0 or result.stdout.strip() not in {"ok", ""}:
                 raise AdapterError("action_failed")
             return {"transport": method}
-        if action == "media.setVolume":
-            percent = int(round(parameters["volume"] * 100))
-            try:
-                sink_name = self._sink_name()
-            except AdapterError:
-                raise AdapterError("action_failed")
-            result = self._run(["pactl", "set-sink-volume", sink_name, f"{percent}%"])
-            if result.returncode != 0:
-                raise AdapterError("action_failed")
-            self._run(["pactl", "set-sink-mute", sink_name, "0"])
-            return {"volume": percent / 100}
         if action == "theme.set":
             # Rebuild the inventory at execution time so an uninstalled or
             # renamed theme cannot remain addressable through a stale map.

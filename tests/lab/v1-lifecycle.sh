@@ -26,9 +26,9 @@ omarchy_host_test() {
     sleep 0.7
   }
 
-  log "Staging v1011 and an isolated fake Tailscale contract"
+  log "Staging v1012 and an isolated fake Tailscale contract"
   tar -C "$project_dir" --exclude __pycache__ --exclude '*.pyc' -cf - . | ssh_guest "rm -rf /tmp/sidecar-v1 && mkdir -p /tmp/sidecar-v1 && tar -C /tmp/sidecar-v1 -xf -"
-  ssh_guest "git -C /tmp/sidecar-v1 init -q && git -C /tmp/sidecar-v1 add . && git -C /tmp/sidecar-v1 -c user.name=SidecarLab -c user.email=lab@invalid commit -qm v1011"
+  ssh_guest "git -C /tmp/sidecar-v1 init -q && git -C /tmp/sidecar-v1 add . && git -C /tmp/sidecar-v1 -c user.name=SidecarLab -c user.email=lab@invalid commit -qm v1012"
 
   security_before="$(ssh_guest "echo '$GUEST_PASSWORD' | sudo -S -p '' bash /tmp/sidecar-v1/tests/lab/security-snapshot.sh")"
   jq -e '.sudoers and .sshFiles and .systemUnits and .runningSystemServices and .suidFiles and .firewall and .listeners and .accounts' <<<"$security_before" >/dev/null
@@ -37,7 +37,7 @@ omarchy_host_test() {
   unrelated_serve_before="$(ssh_session "tailscale serve status --json | jq -c 'del(.TCP[\"48719\"])'")"
 
   ssh_session "rm -rf \"\$HOME/.config/omarchy/plugins/io.github.mtolhuys.sidecar\"; omarchy-plugin-add /tmp/sidecar-v1 --enable --yes"
-  wait_for_guest_state "service, widget, helper, and web graph v1011 agree" 30 ssh_session "omarchy-shell sidecar identity | jq -e '.service == \"sidecar-service-v1011\" and .widget == \"sidecar-widget-v1011\" and .helper == \"sidecard-v1011\" and .web == \"sidecar-web-v1011\" and .state == \"ready\"'" || {
+  wait_for_guest_state "service, widget, helper, and web graph v1012 agree" 30 ssh_session "omarchy-shell sidecar identity | jq -e '.service == \"sidecar-service-v1012\" and .widget == \"sidecar-widget-v1012\" and .helper == \"sidecard-v1012\" and .web == \"sidecar-web-v1012\" and .state == \"ready\"'" || {
     ssh_session "omarchy-shell shell listPlugins | jq '.[] | select(.id == \"io.github.mtolhuys.sidecar\")'; journalctl --user --since '-3 minutes' --no-pager | tail -n 180" || true
     return 1
   }
@@ -70,11 +70,11 @@ omarchy_host_test() {
   pending_json="$(ssh_session "cat /tmp/sidecar-client-pending.json")"
   request_id="$(jq -r .requestId <<<"$pending_json")"
   ssh_session "\"$plugin_dir/helper/sidecarctl\" status | jq -e --arg id '$request_id' --argjson phrase '$(jq -c .verificationPhrase <<<"$pending_json")' '.pending | any(.id == \$id and .verificationPhrase == \$phrase)'"
-  capture_console "success-sidecar-v1011-01-pending"
+  capture_console "success-sidecar-v1012-01-pending"
 
   qmp_pointer_tap "$screen_width" "$screen_height" "$((icon_x - 240))" 230 left
   wait_for_guest_state "QMP pointer approves the exact phone" 12 ssh_session "\"$plugin_dir/helper/sidecarctl\" status | jq -e '.deviceCount == 1 and .pending == [] and .devices[0].name == \"<b>Lab Phone</b>\"'" || {
-    capture_console "failure-sidecar-v1011-allow-coordinate"
+    capture_console "failure-sidecar-v1012-allow-coordinate"
     return 1
   }
   device_id="$(ssh_session "\"$plugin_dir/helper/sidecarctl\" status | jq -r '.devices[0].id'")"
@@ -87,10 +87,10 @@ omarchy_host_test() {
   capability_json="$(ssh_session "cat /tmp/sidecar-capability-pending.json")"
   capability_request_id="$(jq -r .requestId <<<"$capability_json")"
   ssh_session "\"$plugin_dir/helper/sidecarctl\" status | jq -e --arg id '$capability_request_id' '.capabilityRequests | any(.id == \$id and .scopes == [\"control:window-move\",\"control:theme\",\"control:lock\",\"write:inbox\"])'"
-  capture_console "success-sidecar-v1011-02-capability-request"
+  capture_console "success-sidecar-v1012-02-capability-request"
   qmp_pointer_tap "$screen_width" "$screen_height" "$((icon_x - 240))" 205 left
   wait_for_guest_state "QMP pointer approves Drop and abilities on the same credential" 15 ssh_session "omarchy-shell sidecar identity | jq -e '.capabilities == 0' && \"$plugin_dir/helper/sidecarctl\" status | jq -e --arg id '$device_id' '.devices[0].id == \$id and ([\"control:window-move\",\"control:theme\",\"control:lock\",\"write:inbox\"] - .devices[0].scopes | length == 0)'" || {
-    capture_console "failure-sidecar-v1011-capability-coordinate"
+    capture_console "failure-sidecar-v1012-capability-coordinate"
     return 1
   }
 
@@ -106,14 +106,14 @@ omarchy_host_test() {
     qmp_pointer_tap "$screen_width" "$screen_height" "$icon_x" "$icon_y" left
   fi
   wait_for_guest_state "desktop panel renders bounded Drop attention" 15 ssh_session "omarchy-shell sidecar identity | jq -e '.open == true' && \"$plugin_dir/helper/sidecarctl\" status | jq -e '.inbox.receivedCount == 2 and .inbox.lastKind == \"Text\" and .inbox.stagingCount == 0'" || return 1
-  capture_console "success-sidecar-v1011-03-drop-attention"
+  capture_console "success-sidecar-v1012-03-drop-attention"
 
   qmp_pointer_tap "$screen_width" "$screen_height" "$((icon_x + 25))" 123 left
   wait_for_guest_state "rendered Open inbox control reveals the local fixed directory" 15 ssh_session "hyprctl -j clients | jq -e 'any(.[]; ((.class // \"\") | test(\"nautilus\"; \"i\")) and ((.title // \"\") | contains(\"Sidecar\")))'" || {
-    capture_console "failure-sidecar-v1011-open-inbox-coordinate"
+    capture_console "failure-sidecar-v1012-open-inbox-coordinate"
     return 1
   }
-  capture_console "success-sidecar-v1011-04-local-reveal"
+  capture_console "success-sidecar-v1012-04-local-reveal"
 
   ssh_session "touch /tmp/sidecar-lock-trigger"
   wait_for_guest_state "typed lock redacts state and stops the active upload" 25 ssh_session "jq -e '.ok and .lockedRedacted and .actionDenied and .lockMidUploadDenied' /tmp/sidecar-lock-result.json && \"$plugin_dir/helper/sidecarctl\" status | jq -e '.locked == true and .inbox.stagingCount == 0'" || return 1
@@ -135,7 +135,7 @@ omarchy_host_test() {
     return 1
   }
   device_id="$(ssh_session "jq -r .newDeviceId /tmp/sidecar-replace-result.json")"
-  capture_console "success-sidecar-v1011-05-clean-repair"
+  capture_console "success-sidecar-v1012-05-clean-repair"
 
   helper_pid="$(ssh_session "pgrep -f '[h]elper/sidecard.*io.github.mtolhuys.sidecar' | head -n1")"
   ssh_session "kill -9 '$helper_pid'"
@@ -143,13 +143,13 @@ omarchy_host_test() {
   replacement_pid="$(ssh_session "pgrep -f '[h]elper/sidecard.*io.github.mtolhuys.sidecar' | head -n1")"
 
   log "Applying a committed same-path runtime edit to prove replacement and policy preservation"
-  ssh_guest "sed -i 's/sidecar-service-v1011/sidecar-service-v1011-labupdate/' /tmp/sidecar-v1/service/v1011/Service.qml && sed -i 's/sidecar-widget-v1011/sidecar-widget-v1011-labupdate/' /tmp/sidecar-v1/bar-widget/v1011/BarWidget.qml && git -C /tmp/sidecar-v1 add service/v1011/Service.qml bar-widget/v1011/BarWidget.qml && git -C /tmp/sidecar-v1 -c user.name=SidecarLab -c user.email=lab@invalid commit -qm v1011-labupdate"
+  ssh_guest "sed -i 's/sidecar-service-v1012/sidecar-service-v1012-labupdate/' /tmp/sidecar-v1/service/v1012/Service.qml && sed -i 's/sidecar-widget-v1012/sidecar-widget-v1012-labupdate/' /tmp/sidecar-v1/bar-widget/v1012/BarWidget.qml && git -C /tmp/sidecar-v1 add service/v1012/Service.qml bar-widget/v1012/BarWidget.qml && git -C /tmp/sidecar-v1 -c user.name=SidecarLab -c user.email=lab@invalid commit -qm v1012-labupdate"
   ssh_session "omarchy-plugin-update io.github.mtolhuys.sidecar --yes"
-  wait_for_guest_state "hot update replaces identities and preserves device policy" 35 ssh_session "omarchy-shell sidecar identity | jq -e '.service == \"sidecar-service-v1011-labupdate\" and .widget == \"sidecar-widget-v1011-labupdate\" and .helper == \"sidecard-v1011\" and .web == \"sidecar-web-v1011\" and .state == \"ready\"' && \"$plugin_dir/helper/sidecarctl\" status | jq -e --arg id '$device_id' '.deviceCount == 1 and .devices[0].id == \$id and ([\"control:window-move\",\"control:theme\",\"control:lock\"] - .devices[0].scopes | length == 0)' && curl -fsS http://127.0.0.1:47991/app/app.v1011.js | grep -F 'sidecar-web-v1011' >/dev/null && current=\$(pgrep -f '[h]elper/sidecard.*io.github.mtolhuys.sidecar' | head -n1); test \"\$current\" != '$replacement_pid'" || {
+  wait_for_guest_state "hot update replaces identities and preserves device policy" 35 ssh_session "omarchy-shell sidecar identity | jq -e '.service == \"sidecar-service-v1012-labupdate\" and .widget == \"sidecar-widget-v1012-labupdate\" and .helper == \"sidecard-v1012\" and .web == \"sidecar-web-v1012\" and .state == \"ready\"' && \"$plugin_dir/helper/sidecarctl\" status | jq -e --arg id '$device_id' '.deviceCount == 1 and .devices[0].id == \$id and ([\"control:window-move\",\"control:theme\",\"control:lock\"] - .devices[0].scopes | length == 0)' && curl -fsS http://127.0.0.1:47991/app/app.v1012.js | grep -F 'sidecar-web-v1012' >/dev/null && current=\$(pgrep -f '[h]elper/sidecard.*io.github.mtolhuys.sidecar' | head -n1); test \"\$current\" != '$replacement_pid'" || {
     ssh_session "omarchy-shell sidecar identity; \"$plugin_dir/helper/sidecarctl\" status; pgrep -af '[h]elper/sidecard.*io.github.mtolhuys.sidecar'" || true
     return 1
   }
-  capture_console "success-sidecar-v1011-06-hot-update"
+  capture_console "success-sidecar-v1012-06-hot-update"
 
   ssh_session "\"$plugin_dir/helper/sidecarctl\" device-revoke '$device_id'"
   wait_for_guest_state "local revoke removes the exact credential" 12 ssh_session "\"$plugin_dir/helper/sidecarctl\" diagnostics | jq -e '.deviceCount == 0'" || return 1
@@ -182,6 +182,6 @@ omarchy_host_test() {
     log "Protected trust boundaries changed: before=$security_before after=$security_after"
     return 1
   fi
-  capture_console "success-sidecar-v1011-07-removed"
-  printf 'ok - v1011 Portal/Morph, scopes, lock, update, conflict, trust boundaries, and cleanup passed\n'
+  capture_console "success-sidecar-v1012-07-removed"
+  printf 'ok - v1012 Portal/Morph, scopes, lock, update, conflict, trust boundaries, and cleanup passed\n'
 }

@@ -1,4 +1,4 @@
-// Sidecar immutable Portal model graph v1011.
+// Sidecar immutable Portal model graph v1012.
 export const FALLBACK_THEME = Object.freeze({
   background: "#111116", surface: "#23232b", "surface-elevated": "#373743",
   text: "#fafafa", "text-muted": "#aaaab7", accent: "#8b5cf6",

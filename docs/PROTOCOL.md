@@ -56,7 +56,6 @@ They never contain window titles, paths, URLs, commands, terminal data, media me
 | `media.playPause` | `{}` | `control:media` |
 | `media.previous` | `{}` | `control:media` |
 | `media.next` | `{}` | `control:media` |
-| `media.setVolume` | `{volume}`, finite 0..1 | `control:media` |
 | `theme.set` | `{themeId}` | `control:theme` |
 | `theme.backgroundNext` | `{}` | `control:theme` |
 | `desktop.lock` | `{}` | `control:lock` |

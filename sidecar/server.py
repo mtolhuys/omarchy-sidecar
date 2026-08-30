@@ -429,10 +429,10 @@ class SidecarHandler(BaseHTTPRequestHandler):
             "/app/": "index.html",
             "/app/pair": "index.html",
             "/app/share-target": "index.html",
-            "/app/app.v1011.css": "app.v1011.css",
-            "/app/app.v1011.js": "app.v1011.js",
-            "/app/model.v1011.js": "model.v1011.js",
-            "/app/sw.v1011.js": "sw.v1011.js",
+            "/app/app.v1012.css": "app.v1012.css",
+            "/app/app.v1012.js": "app.v1012.js",
+            "/app/model.v1012.js": "model.v1012.js",
+            "/app/sw.v1012.js": "sw.v1012.js",
             "/app/manifest.webmanifest": "manifest.webmanifest",
             "/app/icon.svg": "icon.svg",
             "/app/icon-192.png": "icon-192.png",
@@ -450,7 +450,7 @@ class SidecarHandler(BaseHTTPRequestHandler):
             mime = "application/manifest+json"
         self.send_response(200)
         self.send_header("Content-Type", f"{mime}; charset=utf-8" if mime.startswith(("text/", "application/javascript", "application/manifest")) else mime)
-        cache = "public, max-age=31536000, immutable" if ".v1011." in target.name or target.suffix == ".png" else "no-cache"
+        cache = "public, max-age=31536000, immutable" if ".v1012." in target.name or target.suffix == ".png" else "no-cache"
         self._base_headers(cache)
         self.send_header("Content-Security-Policy", CSP)
         self.send_header("Service-Worker-Allowed", "/app/" if target.name.startswith("sw.") else "none")

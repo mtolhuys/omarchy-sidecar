@@ -8,7 +8,7 @@ BarWidget {
   id: root
 
   moduleName: "io.github.mtolhuys.sidecar"
-  readonly property string buildIdentity: "sidecar-widget-v1011"
+  readonly property string buildIdentity: "sidecar-widget-v1012"
   readonly property var sidecarService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.sidecar") : null
   readonly property var status: sidecarService && sidecarService.status

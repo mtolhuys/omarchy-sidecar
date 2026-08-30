@@ -313,7 +313,7 @@ def main() -> int:
         capability = request(
             "/api/v1/capabilities/request",
             {
-                "requestId": "cap_lab_v1011",
+                "requestId": "cap_lab_v1012",
                 "scopes": ["control:window-move", "control:theme", "control:lock", "write:inbox"],
             },
             credential,

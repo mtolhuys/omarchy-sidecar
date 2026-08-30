@@ -51,7 +51,7 @@ Default scopes:
 - `control:theme`
 - `control:lock`
 
-Only move, theme, and lock may be requested later from the phone. The unlocked local panel displays the exact requesting device and human scope labels before approval. Rescope is serialized with actions and active streams receive refreshed state.
+Only move, theme, lock, and `write:inbox` may be requested later from the phone. The unlocked local panel displays the exact requesting device and human scope labels before approval. Rescope is serialized with actions and active streams receive refreshed state.
 
 Retired scopes are parse-only compatibility values. They authorize no active action and cannot be requested.
 

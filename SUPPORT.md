@@ -34,6 +34,12 @@ Unlock the desktop. Unknown lock state is intentionally treated as locked. If Si
 
 Sidecar falls back to a palette preview when an installed theme has no safe current wallpaper image. It never guesses paths or downloads artwork. If theme application fails, refresh the installed theme list and tap again.
 
+## Drop cannot send a file
+
+Drop requires the separately approved **Send allowed files to Sidecar Inbox** capability. Unlock the desktop and approve that request on the Sidecar panel; the existing credential is retained. Lock, pause, revoke, offline state, insufficient space, an unsupported file, or an expired intent stops the transfer with a literal recovery message. Retry is always explicit.
+
+The accepted formats are PNG, JPEG, WebP, GIF, PDF, and UTF-8 `.txt`, with five files maximum, 25 MiB per file, and 50 MiB per batch. Files land in `Downloads/Sidecar` through the desktop's fixed Downloads contract. Sidecar never accepts an arbitrary destination.
+
 ## Diagnostics
 
 ```bash
@@ -45,11 +51,8 @@ Diagnostics intentionally omit credentials, device names, pairing material, Tail
 
 ## Update
 
-Use the complete local update command in [README.md](README.md#local-install-or-update). A correct update reports service/helper/web graph `v1011` and preserves existing phone credentials and exact scopes.
+Use the complete local update command in [README.md](README.md#local-install-or-update). A correct update reports service/helper/web graph `v1012` and preserves existing phone credentials and exact scopes.
 
 ## Report a vulnerability
 
 Follow [SECURITY.md](SECURITY.md). Do not include live credentials, pairing QR data, private tailnet names, or unredacted diagnostics in a public report.
-Drop requires the separately approved **Send allowed files to Sidecar Inbox** capability. Unlock the desktop and approve that request on the Sidecar panel; the existing credential is retained. Lock, pause, revoke, offline state, insufficient space, an unsupported file, or an expired intent stops the transfer with a literal recovery message. Retry is always explicit.
-
-The accepted formats are PNG, JPEG, WebP, GIF, PDF, and UTF-8 `.txt`, with five files maximum, 25 MiB per file, and 50 MiB per batch. Files land in Downloads/Sidecar through the desktop's fixed Downloads contract. Sidecar never accepts an arbitrary destination.

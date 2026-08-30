@@ -207,7 +207,7 @@ class HelperIntegrationTests(unittest.TestCase):
         self.assertIn("microphone=()", static_headers["Permissions-Policy"])
         self.assertNotIn("http://", html)
         self.assertNotIn("https://", html)
-        for asset in ("app.v1011.js", "model.v1011.js", "app.v1011.css", "sw.v1011.js"):
+        for asset in ("app.v1012.js", "model.v1012.js", "app.v1012.css", "sw.v1012.js"):
             with urllib.request.urlopen(self.origin + "/app/" + asset, timeout=5) as response:
                 content = response.read().decode()
                 self.assertNotIn("https://", content)

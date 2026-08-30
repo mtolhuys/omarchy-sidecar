@@ -39,7 +39,7 @@ omarchy_host_test() {
 
   wait_for_guest_state "marketing candidate reaches exact-route ready state" 30 ssh_session \
     "omarchy-shell sidecar identity | jq -e \
-      '.service == \"sidecar-service-v1011\" and .widget == \"sidecar-widget-v1011\" and .state == \"ready\"' && \
+      '.service == \"sidecar-service-v1012\" and .widget == \"sidecar-widget-v1012\" and .state == \"ready\"' && \
      \"$plugin_dir/helper/sidecarctl\" status | jq -e \
       '.state == \"ready\" and .route.state == \"ready\" and .lastError == null and .deviceCount == 0' && \
      test -z \"\$(find \"$plugin_dir\" -type d -name __pycache__ -print -quit)\"" || return 1

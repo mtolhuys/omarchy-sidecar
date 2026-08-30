@@ -2,7 +2,7 @@
 
 Drop payloads are sent only after foreground confirmation. The service worker may hold a selected Android share locally in origin-private IndexedDB for at most five minutes; it stores no Sidecar credential with that payload. Cancel, expiry, credential loss, unpair, or completed send deletes that private staging.
 
-Accepted files are written to the fixed `Sidecar Inbox` under the desktop user's Downloads directory. Filenames are normalized and notifications expose only a generic type/count, never a filename or path. Completed files are user-owned data and are not removed by Sidecar disable, update, or uninstall. Incomplete Sidecar staging is removed.
+Accepted files are written to the fixed `Downloads/Sidecar` directory, labelled **Sidecar Inbox** in the interface. Filenames are normalized and notifications expose only a generic type/count, never a filename or path. Completed files are user-owned data and are not removed by Sidecar disable, update, or uninstall. Incomplete Sidecar staging is removed.
 
 Sidecar has no hosted backend, account, analytics, tracking, advertising, public endpoint, or third-party content.
 

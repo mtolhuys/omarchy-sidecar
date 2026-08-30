@@ -4,10 +4,10 @@ from __future__ import annotations
 
 VERSION = "0.2.1"
 PROTOCOL = 1
-HELPER_BUILD_ID = "sidecard-v1011"
-WEB_BUILD_ID = "sidecar-web-v1011"
-SERVICE_BUILD_ID = "sidecar-service-v1011"
-WIDGET_BUILD_ID = "sidecar-widget-v1011"
+HELPER_BUILD_ID = "sidecard-v1012"
+WEB_BUILD_ID = "sidecar-web-v1012"
+SERVICE_BUILD_ID = "sidecar-service-v1012"
+WIDGET_BUILD_ID = "sidecar-widget-v1012"
 
 LOOPBACK_HOST = "127.0.0.1"
 LOOPBACK_PORT = 47991
@@ -100,7 +100,6 @@ ACTION_SCOPES = {
     "media.playPause": "control:media",
     "media.previous": "control:media",
     "media.next": "control:media",
-    "media.setVolume": "control:media",
     "theme.set": "control:theme",
     "theme.backgroundNext": "control:theme",
     "desktop.lock": "control:lock",

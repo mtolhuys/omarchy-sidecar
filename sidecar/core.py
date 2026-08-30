@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 import collections
-import math
 import os
 import queue
 import re
@@ -839,12 +838,6 @@ class SidecarCore:
         elif action == "theme.set":
             require_exact_object(parameters, {"themeId"})
             normalize_id(parameters["themeId"], "theme id")
-        elif action == "media.setVolume":
-            require_exact_object(parameters, {"volume"})
-            volume = parameters["volume"]
-            if isinstance(volume, bool) or not isinstance(volume, (int, float)) or not math.isfinite(volume) or volume < 0 or volume > 1:
-                raise ApiError("bad_request")
-            parameters = {"volume": round(float(volume), 3)}
         else:
             raise ApiError("bad_request")
         return parameters

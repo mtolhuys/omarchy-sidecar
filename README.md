@@ -84,7 +84,7 @@ Check the installed helper:
   jq '{builds,state,routeState,errorCode,securityReceipt}'
 ```
 
-All three builds should end in `v1011`; `securityReceipt.healthy` should be `true`.
+All three builds should end in `v1012`; `securityReceipt.healthy` should be `true`.
 
 ## Development
 

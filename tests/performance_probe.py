@@ -196,7 +196,7 @@ def main() -> int:
         del upload_body
         _, final_rss_kib, final_high_water_kib = proc_metrics(process.pid)
         report = {
-            "build": "sidecard-v1011",
+            "build": "sidecard-v1012",
             "python": platform.python_version(),
             "machine": platform.machine(),
             "idleSeconds": round(idle_elapsed, 3),

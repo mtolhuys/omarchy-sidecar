@@ -85,10 +85,10 @@ cmp -s "$work_repo/manifest.json" "$plugin_dir/manifest.json" ||
   fail "installed manifest does not match the current artifact"
 
 for entry_point in \
-  service/v1011/Service.qml \
-  bar-widget/v1011/BarWidget.qml \
+  service/v1012/Service.qml \
+  bar-widget/v1012/BarWidget.qml \
   helper/sidecard \
-  web/dist/app.v1011.js; do
+  web/dist/app.v1012.js; do
   [[ -f $plugin_dir/$entry_point ]] || fail "installed graph is missing $entry_point"
 done
 

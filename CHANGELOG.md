@@ -3,9 +3,10 @@
 ## 0.2.1 — 2026-08-30
 
 - Replaced the narrow raw-screenshot README animation with a reproducible widescreen six-scene tour of normal-camera pairing, Portal, Morph, Drop, and Sidecar's private-by-design boundary; slowed the sequence for readability and tightened the README introduction into a fast feature overview.
+- Removed an undeclared remote volume-control action and its `pactl` command surface; Beam now exposes exactly previous, play/pause, and next as documented.
 - Losslessly cropped the Portal and Morph marketing captures to remove oversized empty viewport canvas and the small-screen browser gutter, then retuned the banner composition around the denser screenshots.
 
-- Hardened the v1011 release graph: stale authenticated snapshot/stream/capability races now re-read current policy, route and lock loss invalidate incomplete Drop state under the action boundary, HTTP framing is single-request and fail-closed, browser reconnects are bounded/deduplicated, PDF action-name/object-stream tricks are rejected, and final inbox commit uses verified directory descriptors and inode checks.
+- Hardened the v1012 release graph: stale authenticated snapshot/stream/capability races now re-read current policy, route and lock loss invalidate incomplete Drop state under the action boundary, HTTP framing is single-request and fail-closed, browser reconnects are bounded/deduplicated, PDF action-name/object-stream tricks are rejected, and final inbox commit uses verified directory descriptors and inode checks.
 
 - Added Drop: an explicitly confirmed Android share-target and in-app picker feeding a fixed, bounded Sidecar Inbox.
 - Added separate `write:inbox` approval, streamed exact-length/hash/type validation, active-content checks, private staging, collision-safe mode-0600 commits, literal recovery, desktop attention, and local reveal.

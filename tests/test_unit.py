@@ -409,9 +409,15 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(snapshot["themes"]["currentId"], "theme_aurora")
         self.assertEqual(set(snapshot["beam"]), {"provider", "kind", "label", "status", "actions"})
         self.assertEqual(snapshot["beam"]["provider"], "media.transport")
+        self.assertNotIn("volume", snapshot["media"])
         self.assertEqual([item["action"] for item in snapshot["beam"]["actions"]], [
             "media.previous", "media.playPause", "media.next",
         ])
+        with self.assertRaises(ApiError) as undeclared:
+            self.core.perform_action(device, {
+                "requestId": "req_volume", "action": "media.setVolume", "parameters": {"volume": 0.5},
+            })
+        self.assertEqual(undeclared.exception.code, "bad_request")
         moved = self.core.perform_action(device, {
             "requestId": "req_move", "action": "window.moveToWorkspace",
             "parameters": {"windowId": "win_editor", "workspaceId": "ws_2"},
@@ -640,10 +646,6 @@ class AdapterAndRouteTests(unittest.TestCase):
             run_json.assert_called_once_with(["hyprctl", "-j", "activewindow"])
         with self.assertRaises(AdapterError):
             adapter.perform("workspace.focus", {"workspaceId": "workspace;rm"})
-        with mock.patch.object(adapter, "_run", return_value=subprocess.CompletedProcess([], 0, "--upload-command=bad", "")):
-            with self.assertRaises(AdapterError):
-                adapter._sink_name()
-
     def test_adapter_requires_authoritative_focus_confirmation(self) -> None:
         adapter = OmarchyAdapter()
         adapter._workspace_targets = {"ws_safe": "2"}
@@ -798,8 +800,8 @@ class AdapterAndRouteTests(unittest.TestCase):
         self.assertEqual(sanitized_color("url(evil)", "#000000"), "#000000")
 
     def test_qml_text_never_auto_interprets_untrusted_markup(self) -> None:
-        widget = (PROJECT / "bar-widget" / "v1011" / "BarWidget.qml").read_text()
-        service = (PROJECT / "service" / "v1011" / "Service.qml").read_text()
+        widget = (PROJECT / "bar-widget" / "v1012" / "BarWidget.qml").read_text()
+        service = (PROJECT / "service" / "v1012" / "Service.qml").read_text()
         self.assertEqual(widget.count("Text {"), widget.count("textFormat: Text.PlainText"))
         self.assertIn('"Confirm remove phone"', widget)
         self.assertIn("revokeConfirming", widget)
@@ -847,7 +849,7 @@ class AdapterAndRouteTests(unittest.TestCase):
         self.assertNotIn("omarchy-install-service-tailscale", service)
 
     def test_versioned_runtime_graph_moves_as_one_cache_busting_unit(self) -> None:
-        graph = "v1011"
+        graph = "v1012"
         manifest = json.loads((PROJECT / "manifest.json").read_text())
         self.assertEqual(manifest["entryPoints"]["service"], f"service/{graph}/Service.qml")
         self.assertEqual(manifest["entryPoints"]["barWidget"], f"bar-widget/{graph}/BarWidget.qml")
