@@ -27,9 +27,9 @@ The `-390` and `-320` suffixes record the browser viewport used for verification
 
 Current desktop media:
 
-- `desktop-sidecar-drop-attention.png`, captured only in the disposable Plugin Lab.
-- `desktop-sidecar-pairing.png`, based on disposable Plugin Lab run `20260830-205434`; its QR payload is the fixed non-authorizing text `SIDECAR-DEMO-NOT-A-PAIRING-SECRET`, never a pairing URL or secret.
+- `desktop-sidecar-drop-attention.png`, captured only in disposable Plugin Lab run `20260830-221918`.
+- `desktop-sidecar-pairing.png`, based on disposable Plugin Lab run `20260830-221730`; its QR payload is the fixed non-authorizing text `SIDECAR-DEMO-NOT-A-PAIRING-SECRET`, never a pairing URL or secret.
 
-The repository-header GIF uses six concise scenes at a calm reading pace: product overview → normal-camera pairing → Portal → Morph → Drop → private-by-design. It must use real current captures, remain legible at README width, and never imply remote terminal, agent, screen sharing, arbitrary file access, cloud relay, or unsupported platform behavior. Rebuild it deterministically with `make marketing-gif` after replacing the required current-product captures.
+The repository-header GIF uses six concise scenes over 14.15 seconds at a calm reading pace: product overview → normal-camera pairing → Portal → Morph → Drop → private-by-design. It must use real current captures, remain legible at README width, and never imply remote terminal, agent, screen sharing, arbitrary file access, cloud relay, or unsupported platform behavior. Rebuild it deterministically with `make marketing-gif` after replacing the required current-product captures.
 
 Screenshots prove visual composition only. Protocol, action, lock, route, and cleanup claims require machine assertions.
