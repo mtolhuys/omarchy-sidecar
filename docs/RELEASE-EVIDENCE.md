@@ -1,6 +1,14 @@
-# Release evidence — 0.2.1 / v1012
+# Release evidence — 0.2.2 / v1013
 
-Updated: 2026-08-30
+Updated: 2026-09-17
+
+## What 0.2.2 changes
+
+One fix and the graph advance it requires. On a stock Omarchy 4.0.3 desktop the 0.2.1 service never started: the shell strips `__sourceDir` from a third-party plugin's public manifest (`publicPluginManifest` in the 4.0.3 `shell.qml`), `service/v1012/Service.qml` read its plugin root from that field, got `""`, and ran `/helper/sidecarctl` and `/helper/sidecard`, which the shell logged as "Process failed to start" once a second while the widget stayed on "starting". Reproduced in the disposable Plugin Lab's stock 4.0.3 guest on `main` at `93800d2`: run `20260917-231030` failed at the first lifecycle step, "service, widget, helper, and web graph agree", with 29 such log lines in three minutes. The `v1013` service resolves its root from its own component URL (`Qt.resolvedUrl("../../")`), keeps a manifest `__sourceDir` only as a fallback and only when absolute, and proves each candidate by loading its `manifest.json` through a `FileView` before any process is started; with no proven candidate the widget shows "Sidecar could not find its own files beside the service" and nothing runs. Same lab, same guest, same script on this graph: run `20260917-235024` passed every lifecycle step, 25 of 25, with 0 such log lines. An earlier run on the same commit, `20260917-234650`, passed the first nine steps, the failed one included, and then missed the 15-second window in which "Open inbox" has to show a Nautilus window; it carried no diagnostics for that step, the step now dumps the client list, processes, MIME handler, helper status and journal when it fails, and the following run passed it in the window. That step's flakiness in the guest is recorded here, not explained.
+
+The desktop development check, six scoped Quickshell instances on the author's desktop with stand-in `sidecard`/`sidecarctl` scripts and a throwaway HOME (never the daily shell): the 0.2.1 service reproduces the bare `/helper/sidecarctl`; the `v1013` service resolves the copy's root with no manifest field, ignores a manifest `__sourceDir` of `/nonexistent/sidecar` in favour of the component root, falls back to an absolute manifest `__sourceDir` when the component root has no `manifest.json`, does the same when that field arrives one second after creation, and reports the unavailable message when no candidate proves itself.
+
+The rows below say which evidence was produced on this graph and which is carried over from 0.2.1, whose helper, web assets and widget this graph renames without changing.
 
 ## Product decision
 
@@ -10,29 +18,27 @@ The active product is Portal, Morph, contextual Beam, secure pairing, lifecycle 
 
 | Area | Evidence |
 |---|---|
-| Source suite | 71 Python tests pass, including real streamed Drop bodies, policy races, content validation, collision/no-overwrite, restart cleanup, schema-v1 migration, and browser-installation replacement |
-| Web contract | 139 assertions pass: picker/share-target contract, private service-worker staging, bounds, explicit confirmation, SHA-256, XHR progress, completed-batch retry guard, remove/cancel/retry, recovery, cleanup, identity, and responsive/reduced-motion rules |
-| Browser, 390×844 | authenticated Portal and Morph exercised in dark Aurora and light Lupine; pairing, connection settings, explicit theme application, Drop confirmation/scope upgrade/success, ARIA dialog/progress state, 48px targets, haptics off, no horizontal overflow, and zero console warnings/errors verified |
-| Browser, 320×700 | authenticated Portal and Morph exercised in dark Aurora and light Lupine; final navigation remained reachable and no horizontal overflow was present |
-| Reduced motion | the web contract asserts the shipped `prefers-reduced-motion: reduce` override disables transitions/animations; the in-app browser does not expose media-preference emulation, so no separate interactive browser claim is made |
-| Light themes | no hardcoded black CSS shadow/glass; contrast repair and separate light layer/border/preview recipes exercised |
-| Agent removal | hook/plugin/provider/task files absent; active Python/QML/web source scanner rejects Carry/Codex runtime surfaces |
-| Pairing identity | same-instance re-pair atomically removes the first credential and stream; same-name/different-instance devices remain separate; raw and hashed instance identity stay out of public state |
-| Security model | tests and artifact scanner cover root refusal, loopback, exact owned route, separate `write:inbox`, length/hash/type/magic, active PDFs, Unicode names, reservations/concurrency/rates, mode/ownership/link count, live lock/pause/revoke/rescope, replay, diagnostics, and private staging |
-| Performance | Python 3.14.7/x86_64: 300.0 s idle at 0.153% CPU; 31,832 KiB idle RSS; warm snapshots 41.152 ms median/43.079 ms p95; 500 actions at 4/s, 39.169 ms median/41.455 ms p95; exact 25 MiB upload in 67.579 ms with 20 KiB RSS/peak delta; final/peak 48,368 KiB; SHA-256 `46dcc780385019675f4634933190c1e6defd60eebb7543eb4a28875aac4fcb06` |
-| Phase 0 | disposable Plugin Lab run `20260830-221541`: Python 3.14 streaming/cancel cleanup, Downloads/reveal, real notification delivery, Android physical boundary, v1012 graph/cache, addressed move, themes/background, and lock truth passed |
-| Missing Tailscale | disposable Plugin Lab run `20260830-221730`: fail-closed first run, delayed binary detection, HTTPS consent, exact Serve readiness, visible recovery/Pair, input recovery, and complete process/listener cleanup passed |
-| Complete lifecycle | disposable Plugin Lab run `20260830-221918`: QMP pairing and same-credential Drop approval; same-browser replacement; exact digest/location/mode/no-overwrite; attention and rendered reveal; Portal focus/order/move; Morph dark/light/apply/undo; lock/pause/revoke/rescope denial; crash/update; route conflict/retry; completed-file retention through removal; product cleanup; and protected-state restoration passed |
-| Repository media | current v1012 Portal and Morph losslessly content-cropped from verified 390/320 browser viewports, authenticated Drop dark/light/success, disposable-lab generic Drop attention from run `20260830-221918`, and pairing from run `20260830-221730`; the pairing capture replaces the ephemeral QR with fixed non-authorizing demo text, and the deterministic 14.15-second widescreen README tour contains no real filenames, identities, paths, URLs, or secrets |
-| Artifact | deterministic tarball, checksum repeat, and final release-security/artifact scan recorded below |
+| Source suite | 72 Python tests pass on `v1013` (71 of 0.2.1 plus one holding the service's root resolution: component URL first, absolute manifest fallback, manifest.json proof before any process, no bare helper path, no path in the user-facing message) |
+| Web contract | 139 assertions pass on the renamed `v1013` assets |
+| Browser, 390×844 | carried over from 0.2.1: no web asset, style or widget text changed; not re-exercised for 0.2.2 |
+| Browser, 320×700 | carried over from 0.2.1 |
+| Reduced motion | carried over from 0.2.1 |
+| Light themes | carried over from 0.2.1 |
+| Agent removal | the `v1013` source scanner run of `make security` rejects Carry/Codex runtime surfaces; hook/plugin/provider/task files absent |
+| Pairing identity | carried over from 0.2.1; the same tests pass on `v1013` |
+| Security model | `make security` on `v1013`: forbidden primitives absent, non-privileged reproducible artifact inspected |
+| Performance | Python 3.14.7/x86_64 on `v1013`, measured while the Plugin Lab guest VM was running on the same host: 300.0 s idle at 0.153% CPU; 14,696 KiB idle RSS; warm snapshots 40.379 ms median/62.129 ms p95; 500 actions at 4/s, 39.287 ms median/41.600 ms p95; exact 25 MiB upload in 75.655 ms with 652 KiB RSS/0 peak delta; final/peak 35,320/44,144 KiB; SHA-256 `46dcc780385019675f4634933190c1e6defd60eebb7543eb4a28875aac4fcb06`. The p95 snapshot figure is above 0.2.1's 43.079 ms and was taken under that load; the median and the action figures are level with 0.2.1 |
+| Phase 0 | carried over from 0.2.1 run `20260830-221541`; not re-run on the 4.0.3 guest for 0.2.2 |
+| Missing Tailscale | carried over from 0.2.1 run `20260830-221730`; not re-run on the 4.0.3 guest for 0.2.2 |
+| Complete lifecycle | disposable Plugin Lab, stock 4.0.3 guest, run `20260917-235024` on `v1013`: 25 of 25 steps passed, from "service, widget, helper, and web graph v1013 agree" through product cleanup and protected-state restoration; run `20260917-231030` on 0.2.1 (`main` at `93800d2`) failed at the first step, which is the defect; run `20260917-234650` on `v1013` passed the first nine and missed the inbox-reveal window once, as described above |
+| Repository media | carried over from 0.2.1: captured on `v1012`, whose phone UI, widget and panel are unchanged in `v1013`; `docs/SCREENSHOTS.md` names the current graph and the captures were not retaken |
+| Artifact | `omarchy-sidecar-0.2.2.tar.gz` built twice from the same tree with identical bytes; the digest is kept beside it in `dist/`, outside the archive, as before; `make security` inspected it |
 
-Browser evidence used the authenticated in-app browser for both exact viewport matrices, the real picker, dark/light application, Drop scope upgrade/send/success, focus/ARIA, touch targets, overflow, and console inspection. Beam exposed exactly previous, play/pause, and next, with no volume surface. The committed 43-byte fixture arrived at the fixed inbox with mode `0600`, SHA-256 `1458617ef725ef6ac5b398a18cab650edb5c46e10fa71229f616273c95e2eb75`, and an empty staging directory. The isolated browser tab, helper, state, inbox, and listener were stopped and removed after verification. Browser screenshots are visual evidence only; HTTP and lab assertions prove state.
-
-The pre-change performance baseline was 0.160% idle CPU, 31,760 KiB idle RSS, 48,256 KiB peak/final RSS, 38.677/41.353 ms warm snapshot median/p95, 39.505/41.647 ms action median/p95, and 73.127 ms upload latency. The final result reduced idle CPU, action latency, and upload latency. RSS moved by only 72 KiB idle and 112 KiB peak; snapshot median/p95 rose 6.4%/4.2%. No material regression was observed.
+The 0.2.1 browser evidence (authenticated in-app browser at both viewport matrices, the real picker, dark/light application, Drop scope upgrade/send/success, focus/ARIA, touch targets, overflow, console inspection, the 43-byte fixture at mode `0600` with SHA-256 `1458617ef725ef6ac5b398a18cab650edb5c46e10fa71229f616273c95e2eb75`) stands as recorded on 2026-08-30 and was not repeated for 0.2.2. Browser screenshots are visual evidence only; HTTP and lab assertions prove state.
 
 ## Final artifact
 
-The authoritative SHA-256 is stored beside the tarball in `dist/omarchy-sidecar-0.2.1.tar.gz.sha256` and is verified with `sha256sum -c`. Keeping the digest outside the archive avoids a self-referential artifact. The release process builds twice from the same tree and blocks unless both bytes and digests match.
+The authoritative SHA-256 is stored beside the tarball in `dist/omarchy-sidecar-0.2.2.tar.gz.sha256` and is verified with `sha256sum -c`. Keeping the digest outside the archive avoids a self-referential artifact. The release process builds twice from the same tree and blocks unless both bytes and digests match.
 
 ## Previously observed physical boundary
 

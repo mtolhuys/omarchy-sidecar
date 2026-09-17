@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 — unreleased
+
+- Fixed the service never starting on a stock Omarchy 4.0.3 desktop. The shell that ships with 4.0.3 strips `__sourceDir` from a third-party plugin's public manifest, so the `v1012` service read an empty plugin root and tried to run `/helper/sidecarctl` and `/helper/sidecard`; every stock install logged "Process failed to start" once a second and the widget stayed on "starting". The service now takes its root from its own component URL (`Qt.resolvedUrl`), keeps a manifest `__sourceDir` only as an absolute-path fallback, and proves each candidate by reading its `manifest.json` before any process is started; when no candidate proves itself the widget shows "Sidecar could not find its own files beside the service" and nothing is run. Reproduced and proved in the disposable Plugin Lab's stock 4.0.3 guest: lifecycle run `20260917-231030` on 0.2.1 failed at "service, widget, helper, and web graph agree"; see `docs/RELEASE-EVIDENCE.md` for the run on this graph.
+- Advanced the runtime graph to `v1013` (service, widget, helper, web assets, service-worker cache, server allowlist, manifest, tests, and evidence together; `v1012` sources removed), per D-014.
+
 ## 0.2.1 — 2026-08-30
 
 - Replaced the narrow raw-screenshot README animation with a reproducible widescreen six-scene tour of normal-camera pairing, Portal, Morph, Drop, and Sidecar's private-by-design boundary; slowed the sequence for readability and tightened the README introduction into a fast feature overview.

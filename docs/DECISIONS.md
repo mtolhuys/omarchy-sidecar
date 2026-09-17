@@ -50,7 +50,7 @@ Media exposes previous, play/pause, and next only when available. No titles, art
 
 ## D-013: Deterministic transparent distribution
 
-Sidecar 0.2.1 ships source plus a normalized reproducible tar and checksum, never an AUR package or privileged installer. Artifact scanning blocks hooks, services, privilege, SSH, firewall, tailnet enrollment, and runtime downloads. Detached signing is required before a signed-release claim.
+Sidecar 0.2.2 ships source plus a normalized reproducible tar and checksum, never an AUR package or privileged installer. Artifact scanning blocks hooks, services, privilege, SSH, firewall, tailnet enrollment, and runtime downloads. Detached signing is required before a signed-release claim.
 
 ## D-014: Immutable runtime graphs
 
@@ -86,3 +86,7 @@ Android Web Share Target is implemented according to current Chromium documentat
 Accepted. Authenticated handler state is an identity hint, never lasting authority. Snapshot, event subscription, capability, action, route, pause, rescope, replacement, and revoke paths re-read the current durable device under the shared action boundary. Route or lock loss invalidates incomplete Drop state before a minimal projection is published.
 
 Upload validation keeps a descriptor for the exact staging inode; final no-overwrite linking, mode checks, link-count checks, and fsync use verified no-follow directory descriptors. Finite HTTP responses close their connection so rejected or unread request bytes cannot become a second request. These choices trade keep-alive throughput for a smaller framing and filesystem race surface on a bounded phone control plane.
+
+## D-021: The plugin root comes from the component, not the manifest
+
+Accepted. The service resolves its own directory from its component URL (`Qt.resolvedUrl("../../")` from `service/<graph>/Service.qml`), which the shell cannot strip and which is right wherever the plugin is installed. A manifest `__sourceDir` is a fallback, used only when it is an absolute path, because Omarchy 4.0.3's shell removes it from a third-party plugin's public manifest and 0.2.1, which relied on it, never started on a stock desktop. Every candidate root proves itself by loading its `manifest.json` before the service starts a process from it; with no proven root the service reports that it cannot find its own files and runs nothing, so no helper path is ever built from an empty root or resolved through PATH.
