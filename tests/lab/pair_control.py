@@ -148,7 +148,7 @@ def replace_pairing(sidecarctl: str, pending_path: Path, result_path: Path, old_
                 "device": {
                     "name": "<b>Lab Phone</b>",
                     "platform": "android-web",
-                    "clientVersion": "0.2.1",
+                    "clientVersion": "0.2.2",
                     "protocol": 1,
                     "clientInstanceId": CLIENT_INSTANCE_ID,
                 },
@@ -197,7 +197,7 @@ def marketing_drop(sidecarctl: str) -> int:
         "/api/v1/pair/request",
         {
             "secret": urlsplit(opened["pairUrl"]).fragment,
-            "device": {"name": "Demo phone", "platform": "android-web", "clientVersion": "0.2.1", "protocol": 1},
+            "device": {"name": "Demo phone", "platform": "android-web", "clientVersion": "0.2.2", "protocol": 1},
         },
     )
     subprocess.run(
@@ -222,7 +222,7 @@ def browser_fixture(sidecarctl: str, output: Path) -> int:
         "/api/v1/pair/request",
         {
             "secret": urlsplit(opened["pairUrl"]).fragment,
-            "device": {"name": "Responsive fixture", "platform": "desktop-web", "clientVersion": "0.2.1", "protocol": 1},
+            "device": {"name": "Responsive fixture", "platform": "desktop-web", "clientVersion": "0.2.2", "protocol": 1},
         },
     )
     subprocess.run(
@@ -268,7 +268,7 @@ def main() -> int:
                 "device": {
                     "name": "<b>Lab Phone</b>",
                     "platform": "android-web",
-                    "clientVersion": "0.2.1",
+                    "clientVersion": "0.2.2",
                     "protocol": 1,
                     "clientInstanceId": CLIENT_INSTANCE_ID,
                 },
@@ -313,7 +313,7 @@ def main() -> int:
         capability = request(
             "/api/v1/capabilities/request",
             {
-                "requestId": "cap_lab_v1012",
+                "requestId": "cap_lab_v1013",
                 "scopes": ["control:window-move", "control:theme", "control:lock", "write:inbox"],
             },
             credential,

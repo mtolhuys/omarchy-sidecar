@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.mtolhuys.sidecar",
   "name": "Sidecar",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "Maarten Tolhuijs",
   "description": "A private Omarchy desktop companion for your phone.",
   "kinds": [
@@ -10,8 +10,8 @@
     "bar-widget"
   ],
   "entryPoints": {
-    "service": "service/v1012/Service.qml",
-    "barWidget": "bar-widget/v1012/BarWidget.qml"
+    "service": "service/v1013/Service.qml",
+    "barWidget": "bar-widget/v1013/BarWidget.qml"
   },
   "barWidget": {
     "displayName": "Sidecar",

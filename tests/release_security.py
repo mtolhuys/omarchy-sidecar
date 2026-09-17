@@ -16,7 +16,7 @@ from pathlib import Path, PurePosixPath
 
 
 PROJECT = Path(__file__).resolve().parents[1]
-ARTIFACT = PROJECT / "dist" / "omarchy-sidecar-0.2.1.tar.gz"
+ARTIFACT = PROJECT / "dist" / "omarchy-sidecar-0.2.2.tar.gz"
 CHECKSUM = ARTIFACT.with_name(ARTIFACT.name + ".sha256")
 RUNTIME_DIRS = ("sidecar", "helper", "service", "bar-widget", "web")
 ARTIFACT_TOP_LEVEL = {
@@ -49,7 +49,7 @@ def assert_manifest(root: Path) -> None:
         "kinds", "entryPoints", "barWidget",
     }, "manifest gained an install/dependency hook"
     assert manifest["kinds"] == ["service", "bar-widget"]
-    assert manifest["version"] == "0.2.1", "release version drifted"
+    assert manifest["version"] == "0.2.2", "release version drifted"
     assert manifest["author"] == "Maarten Tolhuijs", "maintainer identity drifted"
     assert manifest["barWidget"]["defaultSection"] == "right", "install-time bar placement default drifted"
 
@@ -85,7 +85,7 @@ def assert_runtime_source(root: Path) -> None:
                 continue
             text = path.read_text(errors="strict")
             graph_ids = set(re.findall(r"v\d{4}", relative + "\n" + text))
-            assert graph_ids <= {"v1012"}, f"stale runtime graph in {relative}: {sorted(graph_ids)}"
+            assert graph_ids <= {"v1013"}, f"stale runtime graph in {relative}: {sorted(graph_ids)}"
             assert not FORBIDDEN_EXECUTABLE.search(text), f"privileged executable primitive in {relative}"
             assert not FORBIDDEN_TAILSCALE.search(text), f"forbidden Tailscale operation in {relative}"
             assert "omarchy-install-service-tailscale" not in text, f"privileged installer trigger in {relative}"
@@ -114,8 +114,8 @@ def assert_runtime_source(root: Path) -> None:
         assert not retired.exists(), f"retired Agent integration remains: {retired.relative_to(root)}"
     for relative in (
         "sidecar/app.py", "sidecar/core.py", "sidecar/server.py",
-        "service/v1012/Service.qml", "bar-widget/v1012/BarWidget.qml",
-        "web/dist/index.html", "web/dist/app.v1012.js", "web/dist/model.v1012.js", "web/dist/app.v1012.css",
+        "service/v1013/Service.qml", "bar-widget/v1013/BarWidget.qml",
+        "web/dist/index.html", "web/dist/app.v1013.js", "web/dist/model.v1013.js", "web/dist/app.v1013.css",
     ):
         text = (root / relative).read_text()
         assert not re.search(r"\b(?:carry|codex)\b", text, re.IGNORECASE), f"retired feature remains in {relative}"
@@ -134,8 +134,8 @@ def assert_runtime_source(root: Path) -> None:
     assert "pactl" not in (root / "sidecar" / "adapters.py").read_text(), "audio-volume command surface remains"
     for bound in ("MAX_INBOX_FILES = 5", "MAX_INBOX_FILE_BYTES = 25 * 1024 * 1024", "MAX_INBOX_BATCH_BYTES = 50 * 1024 * 1024"):
         assert bound in constants, f"Drop bound drifted: {bound}"
-    worker = (root / "web" / "dist" / "sw.v1012.js").read_text()
-    assert 'const CACHE = "sidecar-web-v1012-final"' in worker
+    worker = (root / "web" / "dist" / "sw.v1013.js").read_text()
+    assert 'const CACHE = "sidecar-web-v1013-final"' in worker
     assert 'credential' not in worker[worker.index("async function writeShare"):worker.index("async function cleanupShares")], "credential entered share persistence"
     web_manifest = json.loads((root / "web" / "dist" / "manifest.webmanifest").read_text())
     assert web_manifest["share_target"]["method"] == "POST"
@@ -151,7 +151,7 @@ def assert_artifact() -> None:
         for member in members:
             path = PurePosixPath(member.name)
             assert not path.is_absolute() and ".." not in path.parts, f"unsafe artifact path: {member.name}"
-            assert path.parts[0] == "omarchy-sidecar-0.2.1", f"unexpected artifact root: {member.name}"
+            assert path.parts[0] == "omarchy-sidecar-0.2.2", f"unexpected artifact root: {member.name}"
             if len(path.parts) > 1:
                 assert path.parts[1] in ARTIFACT_TOP_LEVEL, f"unexpected artifact top-level path: {member.name}"
             assert not FORBIDDEN_FILENAMES.search(member.name), f"forbidden artifact path: {member.name}"
@@ -166,7 +166,7 @@ def assert_artifact() -> None:
             assert "__pycache__" not in path.parts and path.suffix != ".pyc"
         with tempfile.TemporaryDirectory() as temporary:
             archive.extractall(temporary, filter="data")
-            assert_runtime_source(Path(temporary) / "omarchy-sidecar-0.2.1")
+            assert_runtime_source(Path(temporary) / "omarchy-sidecar-0.2.2")
 
 
 def main() -> None:

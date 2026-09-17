@@ -41,7 +41,7 @@ Sidecar makes a few high-frequency Omarchy actions pleasant from a phone without
 
 Omarchy launches multiple coding agents through one window class, but it does not expose a provider-neutral task lifecycle or conversation API. Product-neutral support for Claude, Grok, Kimi, Codex, and others would otherwise require private-state scraping or generic remote input. Both are unreliable and outside the security boundary.
 
-Therefore Sidecar 0.2.1 contains no agent integration, task companion, prompt surface, or agent marketing claim. A future agent feature requires an upstream, provider-neutral, versioned contract and a separate threat review. Retired agent-related scope strings authorize nothing.
+Therefore Sidecar 0.2.2 contains no agent integration, task companion, prompt surface, or agent marketing claim. A future agent feature requires an upstream, provider-neutral, versioned contract and a separate threat review. Retired agent-related scope strings authorize nothing.
 
 ## Non-goals
 

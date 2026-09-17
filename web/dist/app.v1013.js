@@ -3,10 +3,10 @@
 import {
   activeWorkspace, adjacentWorkspace, missingPortalScopes, reconnectDelay,
   sanitizeBeam, sanitizeTheme, sanitizeThemes, snapshotTransition, stableItemOrder,
-} from "/app/model.v1012.js";
+} from "/app/model.v1013.js";
 
 const PROTOCOL = 1;
-const WEB_BUILD = "sidecar-web-v1012";
+const WEB_BUILD = "sidecar-web-v1013";
 const DROP_SCOPE = "write:inbox";
 const DROP_POLICY = Object.freeze({
   "image/png": [".png"], "image/jpeg": [".jpg", ".jpeg"], "image/webp": [".webp"],
@@ -244,7 +244,7 @@ async function requestPairing(event) {
       body: JSON.stringify({
         secret: pairingSecret,
         device: {
-          name, platform: platform(), clientVersion: "0.2.1", protocol: PROTOCOL,
+          name, platform: platform(), clientVersion: "0.2.2", protocol: PROTOCOL,
           clientInstanceId,
         },
       }),
@@ -1383,7 +1383,7 @@ async function start() {
     const setting = await readSetting("haptics");
     if (typeof setting === "boolean") hapticsEnabled = setting;
   } catch (_) {}
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/app/sw.v1012.js", {scope: "/app/"}).catch(() => {});
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/app/sw.v1013.js", {scope: "/app/"}).catch(() => {});
   try {
     clientInstanceId = await ensureClientInstanceId();
   } catch (_) {

@@ -4,7 +4,7 @@
 
 > Your Omarchy desktop, comfortably within reach.
 
-Current release: **0.2.1**
+Current release: **0.2.2**
 
 ![Sidecar product tour: scan to pair, then use Portal, Morph, Drop, and private phone controls for Omarchy](docs/media/sidecar-showcase.gif)
 
@@ -88,7 +88,7 @@ Check the installed helper:
   jq '{builds,state,routeState,errorCode,securityReceipt}'
 ```
 
-All three builds should end in `v1012`; `securityReceipt.healthy` should be `true`.
+All three builds should end in `v1013`; `securityReceipt.healthy` should be `true`.
 
 ## Development
 
@@ -96,4 +96,4 @@ Desktop integration is tested only in the disposable [Omarchy Plugin Lab](https:
 
 ## Status
 
-Version 0.2.1 is the current release. Source, browser, fake-adapter HTTP, artifact, security, and disposable-VM evidence are tracked in [RELEASE-EVIDENCE.md](docs/RELEASE-EVIDENCE.md). Physical Android foreground Tailscale use has been user-verified, but the installed-PWA share-target and Drop journey have not yet been observed on a physical phone. iOS support, artifact signing, and mutation/cleanup against an authenticated isolated real Tailscale daemon are not claimed.
+Version 0.2.2 is the current release. Source, browser, fake-adapter HTTP, artifact, security, and disposable-VM evidence are tracked in [RELEASE-EVIDENCE.md](docs/RELEASE-EVIDENCE.md). Physical Android foreground Tailscale use has been user-verified, but the installed-PWA share-target and Drop journey have not yet been observed on a physical phone. iOS support, artifact signing, and mutation/cleanup against an authenticated isolated real Tailscale daemon are not claimed.

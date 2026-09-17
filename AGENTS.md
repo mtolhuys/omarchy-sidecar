@@ -1,6 +1,6 @@
 # Sidecar engineering contract
 
-Sidecar 0.2.1 uses runtime graph `v1012`. The source tree, immutable graph, artifact, documentation, tests, evidence, and screenshots must describe the same product.
+Sidecar 0.2.2 uses runtime graph `v1013`. The source tree, immutable graph, artifact, documentation, tests, evidence, and screenshots must describe the same product.
 
 Read these files before changing runtime behavior:
 

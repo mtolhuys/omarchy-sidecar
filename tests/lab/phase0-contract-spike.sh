@@ -23,13 +23,13 @@ cd /tmp/sidecar-phase0 && python3 -B -m unittest \
 command -v xdg-open >/dev/null && command -v omarchy-notification-send >/dev/null && \
 test -x \"\$OMARCHY_PATH/bin/omarchy-tailscale-receive\" && \
 jq -e '.share_target.method == \"POST\" and .share_target.enctype == \"multipart/form-data\"' /tmp/sidecar-phase0/web/dist/manifest.webmanifest && \
-grep -F 'sidecar-web-v1012-final' /tmp/sidecar-phase0/web/dist/sw.v1012.js >/dev/null && \
+grep -F 'sidecar-web-v1013-final' /tmp/sidecar-phase0/web/dist/sw.v1013.js >/dev/null && \
 test ! -e /tmp/sidecar-phase0/service/v1008 && test ! -e /tmp/sidecar-phase0/bar-widget/v1008"
 
   log "Proving the mounted desktop notification route"
   ssh_session "omarchy-notification-send 'Sidecar Drop' 'Phase 0 generic file received' -g '󰉋'"
   sleep 0.8
-  capture_console "success-sidecar-v1012-phase0-notification"
+  capture_console "success-sidecar-v1013-phase0-notification"
 
   qmp_key_chord() {
     local modifier="$1" key="$2" response
@@ -105,7 +105,7 @@ test ! -e /tmp/sidecar-phase0/service/v1008 && test ! -e /tmp/sidecar-phase0/bar
   ssh_session "omarchy-system-lock"
   wait_for_guest_state "session enters the locked state" 12 ssh_session \
     "omarchy-hyprland-session-locked" || return 1
-  capture_console "success-sidecar-v1012-contracts-locked"
+  capture_console "success-sidecar-v1013-contracts-locked"
   type_text "$GUEST_PASSWORD"
   press ret
   wait_for_guest_state "QMP password input unlocks the session" 15 ssh_session \

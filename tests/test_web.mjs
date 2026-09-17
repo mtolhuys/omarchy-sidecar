@@ -4,7 +4,7 @@ import {
   PORTAL_SCOPES, activeWorkspace, adjacentWorkspace, contrast, mixColor,
   missingPortalScopes, reconnectDelay, sanitizeBeam, sanitizeTheme, sanitizeThemes,
   snapshotTransition, stableItemOrder,
-} from "../web/dist/model.v1012.js";
+} from "../web/dist/model.v1013.js";
 
 const snapshot = {
   protocol: 1,
@@ -85,10 +85,10 @@ assert.equal(sanitizeBeam({...beam, provider: "remote.url"}), null);
 assert.equal(sanitizeBeam({...beam, actions: beam.actions.map((item, index) => index ? item : {...item, action: "shell.run"})}), null);
 
 const html = readFileSync(new URL("../web/dist/index.html", import.meta.url), "utf8");
-const script = readFileSync(new URL("../web/dist/app.v1012.js", import.meta.url), "utf8");
-const model = readFileSync(new URL("../web/dist/model.v1012.js", import.meta.url), "utf8");
-const css = readFileSync(new URL("../web/dist/app.v1012.css", import.meta.url), "utf8");
-const worker = readFileSync(new URL("../web/dist/sw.v1012.js", import.meta.url), "utf8");
+const script = readFileSync(new URL("../web/dist/app.v1013.js", import.meta.url), "utf8");
+const model = readFileSync(new URL("../web/dist/model.v1013.js", import.meta.url), "utf8");
+const css = readFileSync(new URL("../web/dist/app.v1013.css", import.meta.url), "utf8");
+const worker = readFileSync(new URL("../web/dist/sw.v1013.js", import.meta.url), "utf8");
 const manifest = JSON.parse(readFileSync(new URL("../web/dist/manifest.webmanifest", import.meta.url), "utf8"));
 
 assert.match(html, /Tailscale carries traffic privately/);
@@ -174,8 +174,8 @@ assert.match(css, /#haptics-toggle \{ width: 20px; height: 20px/);
 assert.doesNotMatch(css, /#000[0-9a-f]/i);
 assert.doesNotMatch(css, /backdrop-filter/);
 assert.doesNotMatch(css, /\.qr-scanner|scanner-line|\.toggle/);
-assert.match(worker, /sidecar-web-v1012/);
-assert.match(worker, /sidecar-web-v1012-final/);
+assert.match(worker, /sidecar-web-v1013/);
+assert.match(worker, /sidecar-web-v1013-final/);
 assert.match(worker, /const ASSET_PATHS = new Set\(ASSETS\)/);
 assert.match(worker, /url\.search \|\| !ASSET_PATHS\.has\(url\.pathname\)/);
 assert.match(worker, /request\.formData\(\)/);

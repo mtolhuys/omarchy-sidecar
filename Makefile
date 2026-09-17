@@ -1,5 +1,5 @@
-VERSION := 0.2.1
-GRAPH := v1012
+VERSION := 0.2.2
+GRAPH := v1013
 DIST_NAME := omarchy-sidecar-$(VERSION)
 ARTIFACT := dist/$(DIST_NAME).tar.gz
 

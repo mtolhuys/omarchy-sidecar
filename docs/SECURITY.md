@@ -21,7 +21,7 @@ The Arch Linux report on the malicious `hyprland-fixes` AUR package is a concret
 
 Consequences:
 
-- Sidecar 0.2.1 has no AUR package or privileged installer;
+- Sidecar 0.2.2 has no AUR package or privileged installer;
 - source is transparent and the release tar is deterministic;
 - an adjacent SHA-256 checksum is mandatory;
 - archive entries, modes, ordering, ownership, links, and executable surfaces are inspected;

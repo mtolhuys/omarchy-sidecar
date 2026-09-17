@@ -51,7 +51,7 @@ Diagnostics intentionally omit credentials, device names, pairing material, Tail
 
 ## Update
 
-Use the complete local update command in [README.md](README.md#local-install-or-update). A correct update reports service/helper/web graph `v1012` and preserves existing phone credentials and exact scopes.
+Use the complete local update command in [README.md](README.md#local-install-or-update). A correct update reports service/helper/web graph `v1013` and preserves existing phone credentials and exact scopes.
 
 ## Report a vulnerability
 

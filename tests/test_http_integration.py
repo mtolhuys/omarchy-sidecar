@@ -150,7 +150,7 @@ class HelperIntegrationTests(unittest.TestCase):
     ) -> tuple[dict, str]:
         opened = self.control("pair-open")
         secret = opened["pairUrl"].split("#", 1)[1]
-        device = {"name": "HTTP Phone", "platform": "android-web", "clientVersion": "0.2.1", "protocol": 1}
+        device = {"name": "HTTP Phone", "platform": "android-web", "clientVersion": "0.2.2", "protocol": 1}
         if client_instance_id:
             device["clientInstanceId"] = client_instance_id
         status, pending, _ = self.request(
@@ -207,7 +207,7 @@ class HelperIntegrationTests(unittest.TestCase):
         self.assertIn("microphone=()", static_headers["Permissions-Policy"])
         self.assertNotIn("http://", html)
         self.assertNotIn("https://", html)
-        for asset in ("app.v1012.js", "model.v1012.js", "app.v1012.css", "sw.v1012.js"):
+        for asset in ("app.v1013.js", "model.v1013.js", "app.v1013.css", "sw.v1013.js"):
             with urllib.request.urlopen(self.origin + "/app/" + asset, timeout=5) as response:
                 content = response.read().decode()
                 self.assertNotIn("https://", content)

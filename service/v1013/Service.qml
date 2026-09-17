@@ -8,7 +8,7 @@ Item {
   property var shell: null
   property var manifest: null
 
-  readonly property string buildIdentity: "sidecar-service-v1012"
+  readonly property string buildIdentity: "sidecar-service-v1013"
   readonly property string pluginRoot: manifest && manifest.__sourceDir
     ? String(manifest.__sourceDir) : ""
   readonly property string controlPath: pluginRoot + "/helper/sidecarctl"

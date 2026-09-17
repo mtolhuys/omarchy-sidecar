@@ -62,7 +62,7 @@ class CoreFixture:
                 "device": {
                     "name": name,
                     "platform": "android-web",
-                    "clientVersion": "0.2.1",
+                    "clientVersion": "0.2.2",
                     "protocol": 1,
                 },
             },
@@ -195,7 +195,7 @@ class CoreTests(unittest.TestCase):
         self.assertNotIn(opened["pairUrl"].split("#", 1)[1], json.dumps(self.core.local_status()))
         with self.assertRaises(ApiError) as context:
             self.core.pair_request(
-                {"secret": "wrong", "device": {"name": "Other", "platform": "ios-web", "clientVersion": "0.2.1", "protocol": 1}},
+                {"secret": "wrong", "device": {"name": "Other", "platform": "ios-web", "clientVersion": "0.2.2", "protocol": 1}},
                 "other",
             )
         self.assertEqual(context.exception.code, "pairing_expired")
@@ -800,8 +800,8 @@ class AdapterAndRouteTests(unittest.TestCase):
         self.assertEqual(sanitized_color("url(evil)", "#000000"), "#000000")
 
     def test_qml_text_never_auto_interprets_untrusted_markup(self) -> None:
-        widget = (PROJECT / "bar-widget" / "v1012" / "BarWidget.qml").read_text()
-        service = (PROJECT / "service" / "v1012" / "Service.qml").read_text()
+        widget = (PROJECT / "bar-widget" / "v1013" / "BarWidget.qml").read_text()
+        service = (PROJECT / "service" / "v1013" / "Service.qml").read_text()
         self.assertEqual(widget.count("Text {"), widget.count("textFormat: Text.PlainText"))
         self.assertIn('"Confirm remove phone"', widget)
         self.assertIn("revokeConfirming", widget)
@@ -849,7 +849,7 @@ class AdapterAndRouteTests(unittest.TestCase):
         self.assertNotIn("omarchy-install-service-tailscale", service)
 
     def test_versioned_runtime_graph_moves_as_one_cache_busting_unit(self) -> None:
-        graph = "v1012"
+        graph = "v1013"
         manifest = json.loads((PROJECT / "manifest.json").read_text())
         self.assertEqual(manifest["entryPoints"]["service"], f"service/{graph}/Service.qml")
         self.assertEqual(manifest["entryPoints"]["barWidget"], f"bar-widget/{graph}/BarWidget.qml")

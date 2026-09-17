@@ -93,7 +93,7 @@ class DeviceInstanceCoreTests(unittest.TestCase):
                 "device": {
                     "name": name,
                     "platform": "android-web",
-                    "clientVersion": "0.2.1",
+                    "clientVersion": "0.2.2",
                     "protocol": 1,
                     "clientInstanceId": instance_id,
                 },
@@ -145,7 +145,7 @@ class DeviceInstanceCoreTests(unittest.TestCase):
                 {
                     "secret": opened["pairUrl"].split("#", 1)[1],
                     "device": {
-                        "name": "Phone", "platform": "android-web", "clientVersion": "0.2.1",
+                        "name": "Phone", "platform": "android-web", "clientVersion": "0.2.2",
                         "protocol": 1, "clientInstanceId": "same-phone",
                     },
                 },

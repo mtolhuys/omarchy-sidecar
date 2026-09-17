@@ -110,7 +110,7 @@ def main() -> int:
         secret = opened["pairUrl"].split("#", 1)[1]
         pending = request(
             "POST", "/api/v1/pair/request",
-            {"secret": secret, "device": {"name": "Performance Phone", "platform": "lab", "clientVersion": "0.2.1", "protocol": 1}},
+            {"secret": secret, "device": {"name": "Performance Phone", "platform": "lab", "clientVersion": "0.2.2", "protocol": 1}},
         )
         secret = ""
         control(
@@ -196,7 +196,7 @@ def main() -> int:
         del upload_body
         _, final_rss_kib, final_high_water_kib = proc_metrics(process.pid)
         report = {
-            "build": "sidecard-v1012",
+            "build": "sidecard-v1013",
             "python": platform.python_version(),
             "machine": platform.machine(),
             "idleSeconds": round(idle_elapsed, 3),

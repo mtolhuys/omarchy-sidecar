@@ -5,7 +5,7 @@ set -euo pipefail
 readonly plugin_id="io.github.mtolhuys.sidecar"
 project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 readonly project_root
-readonly artifact="$project_root/dist/omarchy-sidecar-0.2.1.tar.gz"
+readonly artifact="$project_root/dist/omarchy-sidecar-0.2.2.tar.gz"
 readonly checksum="$artifact.sha256"
 readonly plugins_dir="${HOME:?HOME is required}/.config/omarchy/plugins"
 readonly plugin_dir="$plugins_dir/$plugin_id"
@@ -85,10 +85,10 @@ cmp -s "$work_repo/manifest.json" "$plugin_dir/manifest.json" ||
   fail "installed manifest does not match the current artifact"
 
 for entry_point in \
-  service/v1012/Service.qml \
-  bar-widget/v1012/BarWidget.qml \
+  service/v1013/Service.qml \
+  bar-widget/v1013/BarWidget.qml \
   helper/sidecard \
-  web/dist/app.v1012.js; do
+  web/dist/app.v1013.js; do
   [[ -f $plugin_dir/$entry_point ]] || fail "installed graph is missing $entry_point"
 done
 

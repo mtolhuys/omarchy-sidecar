@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "sidecar-web-v1012-final";
+const CACHE = "sidecar-web-v1013-final";
 const SHARE_DB = "omarchy-sidecar";
 const SHARE_STORE = "shares";
 const MAX_FILE = 25 * 1024 * 1024;
@@ -9,7 +9,7 @@ const MAX_FILES = 5;
 const SHARE_LIFETIME = 5 * 60 * 1000;
 const ASSETS = [
   "/app/", "/app/pair", "/app/share-target",
-  "/app/app.v1012.css", "/app/app.v1012.js", "/app/model.v1012.js",
+  "/app/app.v1013.css", "/app/app.v1013.js", "/app/model.v1013.js",
   "/app/manifest.webmanifest", "/app/icon.svg", "/app/icon-192.png", "/app/icon-512.png",
 ];
 const ASSET_PATHS = new Set(ASSETS);
