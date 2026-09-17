@@ -7,10 +7,10 @@ sha256 is over everything after the file's header line
 modified, and `omakit add --update` refuses to overwrite one. Modifications
 are to be listed here by the plugin's author.
 
-block run 0.1.0, from omakit commit eb95b39b196e61e592cb9b703600f2bc37ee381a
+block run 0.1.0, from omakit commit 4188f9f12535847af263acfb25e33d162753c2c4
   Run.qml  sha256 7055007d082b81f328b8c3e7f41e648ed27c111ef546220277f0fb7f18332e28
   run-supervisor.py  sha256 3a1c8e18c56592e046e1ac1dfe35df5745c39cc60405dfb6d408ee4eb287ef5f
 
-block store 0.1.0, from omakit commit eb95b39b196e61e592cb9b703600f2bc37ee381a
+block store 0.1.0, from omakit commit 4188f9f12535847af263acfb25e33d162753c2c4
   Store.qml  sha256 c71b5646e0b6ccc4b45e5c57a8c7ed08a089319f4ee7d3ce74ef5e28d8af3801
-  store-helper.py  sha256 28576b8189c9d2547c11b273243731a6c954644b7135186e57257addc3c99dd9
+  store-helper.py  sha256 cec3fcc9573ce7c12f1365e106cc65a936e213553bfe4e3128e8a87eea511dc5

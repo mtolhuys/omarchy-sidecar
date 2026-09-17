@@ -22,16 +22,22 @@ from .security import (
     new_credential,
     verify_credential,
 )
-from .util import atomic_json_write, normalize_id, normalize_name, normalize_platform, parse_rfc3339, private_directory, read_private_json, utc_now
+from .util import normalize_id, normalize_name, normalize_platform, parse_rfc3339, state_directory, utc_now
 
 
 class DeviceStore:
     SCHEMA_VERSION = 2
     _PRIVATE_FIELDS = {"verifier", "credentialLookup", "clientInstanceHash"}
 
+    STATE_FILE = "devices.json"
+
     def __init__(self, state_root: Path):
-        self.root = private_directory(state_root / "omarchy-sidecar")
-        self.path = self.root / "devices.json"
+        # The directory is reached by the Store block's descriptor walk on
+        # every transaction (util.state_transaction); state_root is the base
+        # the walk resolves the same way, kept for the paths in messages.
+        self.state_root = state_root
+        self.root = state_root / "omarchy-sidecar"
+        self.path = self.root / self.STATE_FILE
         self._lock = threading.RLock()
         self._state: dict[str, Any] = {"schemaVersion": self.SCHEMA_VERSION, "paused": False, "devices": []}
         self._last_touch_write: dict[str, float] = {}
@@ -40,23 +46,28 @@ class DeviceStore:
 
     def load(self) -> None:
         with self._lock:
-            if not self.path.exists():
+            state = state_directory(self.state_root)
+            result = state.read(self.STATE_FILE)
+            self.path = Path(state.path) / self.STATE_FILE
+            if result["state"] == "missing":
                 return
             try:
-                loaded = read_private_json(self.path)
+                if result["state"] != "ok":
+                    raise ValueError(result.get("reason", result["state"]))
+                loaded = result["value"]
                 migrated = self._migrate_state(loaded)
                 self._validate_state(loaded)
                 self._state = loaded
                 if migrated:
                     self._persist()
             except Exception:
-                quarantine = self.path.with_name(f"devices.corrupt.{secrets.token_hex(6)}.json")
-                os.replace(self.path, quarantine)
-                if quarantine.is_symlink():
-                    quarantine.unlink()
-                else:
-                    quarantine.chmod(0o600)
-                self.quarantined_path = str(quarantine)
+                # A file that is not ours to trust (a link, another owner,
+                # over the cap, not the schema) is moved aside by name in the
+                # directory descriptor, never followed, and the daemon starts
+                # paused with no devices.
+                quarantine = f"devices.corrupt.{secrets.token_hex(6)}.json"
+                state.move_aside(self.STATE_FILE, quarantine)
+                self.quarantined_path = str(Path(state.path) / quarantine)
                 self._state = {"schemaVersion": self.SCHEMA_VERSION, "paused": True, "devices": []}
                 self._persist()
 
@@ -134,7 +145,9 @@ class DeviceStore:
             parse_rfc3339(device["lastSeenAt"])
 
     def _persist(self) -> None:
-        atomic_json_write(self.path, self._state)
+        result = state_directory(self.state_root).write(self.STATE_FILE, self._state)
+        if result["state"] != "ok":
+            raise RuntimeError(f"state write {result['state']}: {result.get('reason', '')}")
 
     @property
     def paused(self) -> bool:

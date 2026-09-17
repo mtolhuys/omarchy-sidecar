@@ -1,8 +1,8 @@
 # omakit block: store 0.1.0
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Maarten Tolhuijs
-# Source: omakit blocks/store/store-helper.py, commit eb95b39b196e61e592cb9b703600f2bc37ee381a
-# Body sha256: 28576b8189c9d2547c11b273243731a6c954644b7135186e57257addc3c99dd9
+# Source: omakit blocks/store/store-helper.py, commit 4188f9f12535847af263acfb25e33d162753c2c4
+# Body sha256: cec3fcc9573ce7c12f1365e106cc65a936e213553bfe4e3128e8a87eea511dc5
 # end of omakit block header
 #
 # The helper behind Store.qml, started through the Run block as
@@ -121,11 +121,11 @@ def open_no_follow(name, flags, dir_fd, label):
         raise
 
 
-def base_components(kind):
+def base_components(kind, environ):
     """HOME and the XDG base's path components below it; the base must be inside HOME."""
-    home = os.environ.get("HOME", "")
+    home = environ.get("HOME", "")
     variable, default = KINDS[kind]
-    base = os.environ.get(variable) or os.path.join(home, default)
+    base = environ.get(variable) or os.path.join(home, default)
     if not home.startswith("/") or not base.startswith("/"):
         raise Refused("HOME and %s must be absolute paths" % variable)
     home, base = os.path.normpath(home), os.path.normpath(base)
@@ -138,9 +138,16 @@ def base_components(kind):
     return home, base, components
 
 
-def open_private_directory(kind, plugin):
-    """The plugin's private directory, by a descriptor walk from HOME; the descriptors on the way stay open."""
-    home, base, components = base_components(kind)
+def open_private_directory(kind, plugin, environ=None):
+    """The plugin's private directory, by a descriptor walk from HOME; the descriptors on the way stay open.
+
+    `environ` is where HOME and the XDG base are read from: the process
+    environment by default, or a mapping a long-running importer passes so
+    a test can point the walk at a throwaway base without touching the
+    process. Measured before this: an importer's tests wrote into the
+    user's real state directory.
+    """
+    home, base, components = base_components(kind, os.environ if environ is None else environ)
     fds = [open_no_follow(home, DIRECTORY_FLAGS, None, "HOME")]
     verify_owned(fds[0], "HOME", True)
     for part in components:
@@ -308,10 +315,10 @@ def remove_file(dir_fd, name):
     return {"state": "ok"}
 
 
-def operate(opts):
+def operate(opts, environ=None):
     check_options(opts)
     schema = json.loads(opts["schema"]) if opts.get("schema") else None
-    fds, path = open_private_directory(opts["kind"], opts["plugin"])
+    fds, path = open_private_directory(opts["kind"], opts["plugin"], environ)
     try:
         if opts["op"] == "read":
             result = read_file(fds[-1], opts["name"], int(opts["max_bytes"]), schema)
@@ -326,10 +333,10 @@ def operate(opts):
     return result
 
 
-def main():
-    opts = parse(sys.argv[1:])
+def result_of(opts, environ=None):
+    """One operation as the result object Store.qml reports: importable by a long-running program that keeps its own state through this file."""
     try:
-        result = operate(opts)
+        result = operate(opts, environ)
     except Refused as why:
         result = {"state": "refused", "reason": str(why)}
     except Invalid as why:
@@ -338,7 +345,12 @@ def main():
         result = {"state": "overflow", "reason": str(why)}
     except (OSError, ValueError) as why:
         result = {"state": "failed", "reason": "%s: %s" % (type(why).__name__, why)}
-    emit(dict(result, ev="result", op=opts["op"]))
+    return dict(result, op=opts["op"])
+
+
+def main():
+    opts = parse(sys.argv[1:])
+    emit(dict(result_of(opts), ev="result"))
     return 0
 
 

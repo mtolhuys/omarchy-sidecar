@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import functools
+import importlib.util
 import json
 import math
 import os
@@ -134,6 +136,69 @@ def require_exact_object(value: Any, required: set[str], optional: set[str] | No
     if extra:
         raise ValueError(f"unexpected field: {sorted(extra)[0]}")
     return value
+
+
+# The Store block (omakit/store-helper.py, omakit's blocks/store, MIT) is
+# the transaction the state file goes through: a descriptor walk from HOME
+# with O_NOFOLLOW at every step, checks on every descriptor after the open
+# and never before, a capped read, an exclusive 0600 staging file renamed
+# into place. Imported here, since the daemon lives long and does not shell
+# out per write; Store.qml is the same file's front for QML plugins.
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+STATE_PLUGIN = "omarchy-sidecar"
+STATE_MAX_BYTES = 512 * 1024
+
+
+@functools.lru_cache(maxsize=1)
+def store_block():
+    path = PLUGIN_ROOT / "omakit" / "store-helper.py"
+    spec = importlib.util.spec_from_file_location("omakit_store_helper", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class StateDirectory:
+    """The plugin's private state file, through the Store block's transaction.
+
+    The walk starts at HOME when the state base lies under it (the daemon:
+    $XDG_STATE_HOME or ~/.local/state, the directories on the way created
+    0700 where missing), and at the base's parent otherwise (the tests'
+    temporary root), never at the process environment, so a DeviceStore
+    given a temporary root stays in it. Every call is one transaction: the
+    walk, the check on every descriptor, the read or the staged write.
+    """
+
+    def __init__(self, state_root: Path) -> None:
+        self.block = store_block()
+        home = Path.home()
+        walk_from = home if state_root.is_relative_to(home) and state_root != home else state_root.parent
+        self.environ = {"HOME": str(walk_from), "XDG_STATE_HOME": str(state_root)}
+        self.path = str(state_root / STATE_PLUGIN)
+
+    def _operate(self, op: str, name: str, **extra: str) -> dict[str, Any]:
+        opts = {"op": op, "kind": "state", "plugin": STATE_PLUGIN, "name": name, "max_bytes": str(STATE_MAX_BYTES), **extra}
+        return self.block.result_of(opts, self.environ)
+
+    def read(self, name: str) -> dict[str, Any]:
+        """{state: ok|missing|invalid|refused|overflow|failed, value?, bytes?, reason?}, the way Store.qml reports it."""
+        return self._operate("read", name)
+
+    def write(self, name: str, value: Any) -> dict[str, Any]:
+        return self._operate("write", name, value=json.dumps(value, ensure_ascii=False, sort_keys=True))
+
+    def move_aside(self, name: str, new_name: str) -> None:
+        """Rename by name inside the directory descriptor, following nothing: what a load quarantines."""
+        fds, _path = self.block.open_private_directory("state", STATE_PLUGIN, self.environ)
+        try:
+            os.rename(name, new_name, src_dir_fd=fds[-1], dst_dir_fd=fds[-1])
+        finally:
+            for fd in fds:
+                os.close(fd)
+
+
+def state_directory(state_root: Path) -> StateDirectory:
+    return StateDirectory(state_root)
 
 
 def private_directory(path: Path) -> Path:
