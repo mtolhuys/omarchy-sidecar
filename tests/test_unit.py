@@ -848,6 +848,28 @@ class AdapterAndRouteTests(unittest.TestCase):
         self.assertIn('["omarchy-menu", "summon", "install.service"]', service)
         self.assertNotIn("omarchy-install-service-tailscale", service)
 
+    def test_service_resolves_its_root_from_the_component_and_never_runs_a_bare_helper(self) -> None:
+        # Omarchy 4.0.3's shell strips __sourceDir from a third-party manifest
+        # (publicPluginManifest); the v1012 service read the root from it, got
+        # "" on every stock install, and ran /helper/sidecarctl. The root now
+        # comes from the component's own URL, a manifest __sourceDir is only a
+        # fallback, and each candidate proves itself by its manifest.json
+        # before a process is started; no path is ever "" + "/helper/...".
+        service = (PROJECT / "service" / "v1013" / "Service.qml").read_text()
+        self.assertIn('localPath(Qt.resolvedUrl("../../"))', service)
+        self.assertIn("readonly property var rootCandidates: [componentRoot, manifestRoot]", service)
+        self.assertIn('manifest.__sourceDir.indexOf("/") === 0', service)
+        self.assertIn('readonly property string controlPath: pluginRoot === "" ? "" : pluginRoot + "/helper/sidecarctl"', service)
+        self.assertIn('manifestProbe.path = candidate', service)
+        self.assertIn('rootCandidates[probeIndex] + "/manifest.json"', service)
+        self.assertNotIn('? String(manifest.__sourceDir) : ""', service)
+        self.assertNotIn("onPluginRootChanged", service)
+        for guard in ("function startHelper() {\n    if (!helperWanted || helperProcess.running || pluginRoot === \"\") return",
+                      'if (!helperWanted || controlPath === "" || statusProcess.running || controlProcess.running) return',
+                      'if (controlPath === "" || controlProcess.running || controlQueue.length === 0) return'):
+            self.assertIn(guard, service)
+        self.assertNotIn("/", service.split("Sidecar could not find its own files", 1)[1].split("\n", 1)[0].rstrip('"\n'), "the user-facing message names no path")
+
     def test_versioned_runtime_graph_moves_as_one_cache_busting_unit(self) -> None:
         graph = "v1013"
         manifest = json.loads((PROJECT / "manifest.json").read_text())

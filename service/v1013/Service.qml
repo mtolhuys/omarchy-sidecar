@@ -9,11 +9,78 @@ Item {
   property var manifest: null
 
   readonly property string buildIdentity: "sidecar-service-v1013"
-  readonly property string pluginRoot: manifest && manifest.__sourceDir
-    ? String(manifest.__sourceDir) : ""
-  readonly property string controlPath: pluginRoot + "/helper/sidecarctl"
 
-  onPluginRootChanged: Qt.callLater(startHelper)
+  // The plugin's own directory comes from this component's URL, not from
+  // the manifest: the shell of Omarchy 4.0.3 strips `__sourceDir` from a
+  // third-party plugin's manifest (publicPluginManifest in shell.qml), so
+  // the earlier root read from it was "" on every stock install and the
+  // helper path became /helper/sidecarctl. This file is loaded from
+  // <plugin>/service/v1013/Service.qml wherever the plugin is installed,
+  // so two levels up is the plugin root. A manifest `__sourceDir` is the
+  // fallback, only when it is an absolute path. Each candidate has to
+  // prove itself before a process is started from it: manifestProbe reads
+  // <root>/manifest.json there, and only a root where that loads becomes
+  // pluginRoot. No candidate ever yields a relative or bare command.
+  readonly property string componentRoot: localPath(Qt.resolvedUrl("../../"))
+  readonly property string manifestRoot: manifest && typeof manifest.__sourceDir === "string"
+    && manifest.__sourceDir.indexOf("/") === 0
+    ? String(manifest.__sourceDir).replace(/\/+$/, "") : ""
+  readonly property var rootCandidates: [componentRoot, manifestRoot].filter(function(root, index, all) {
+    return root !== "" && all.indexOf(root) === index
+  })
+  property int probeIndex: 0
+  property string pluginRoot: ""
+  readonly property string controlPath: pluginRoot === "" ? "" : pluginRoot + "/helper/sidecarctl"
+
+  function localPath(url) {
+    var value = String(url || "")
+    if (value.indexOf("file://") !== 0) return ""
+    value = value.substring(7)
+    try {
+      value = decodeURIComponent(value)
+    } catch (error) {
+      return ""
+    }
+    value = value.replace(/\/+$/, "")
+    return value.indexOf("/") === 0 ? value : ""
+  }
+
+  function probeNextRoot() {
+    if (probeIndex >= rootCandidates.length) {
+      helperState = "unavailable"
+      helperError = "Sidecar could not find its own files beside the service. Reinstall the plugin."
+      return
+    }
+    var candidate = rootCandidates[probeIndex] + "/manifest.json"
+    if (manifestProbe.path === candidate) manifestProbe.reload()
+    else manifestProbe.path = candidate
+  }
+
+  // The shell assigns `manifest` after the component exists. A probe in
+  // flight reads the candidates again when it moves on, so a fallback that
+  // arrives during it is tried in turn; one that arrives after every
+  // candidate failed starts the probe over.
+  onRootCandidatesChanged: {
+    if (pluginRoot !== "" || helperState !== "unavailable") return
+    probeIndex = 0
+    probeNextRoot()
+  }
+
+  FileView {
+    id: manifestProbe
+    path: ""
+    printErrors: false
+    onLoaded: {
+      root.pluginRoot = root.rootCandidates[root.probeIndex]
+      root.startHelper()
+    }
+    onLoadFailed: function(error) {
+      // Measured: a path assigned from inside this handler is dropped by
+      // the FileView, so the next candidate is probed after it returns.
+      root.probeIndex += 1
+      Qt.callLater(root.probeNextRoot)
+    }
+  }
 
   property bool helperWanted: true
   property string helperState: "starting"
@@ -62,7 +129,7 @@ Item {
   }
 
   function refresh() {
-    if (!helperWanted || statusProcess.running || controlProcess.running) return
+    if (!helperWanted || controlPath === "" || statusProcess.running || controlProcess.running) return
     statusProcess.command = [controlPath, "status"]
     statusProcess.running = true
   }
@@ -80,7 +147,7 @@ Item {
   }
 
   function runNextControl() {
-    if (controlProcess.running || controlQueue.length === 0) return
+    if (controlPath === "" || controlProcess.running || controlQueue.length === 0) return
     var next = controlQueue.slice(0)
     var arguments = next.shift()
     controlQueue = next
@@ -266,7 +333,7 @@ Item {
 
   Component.onCompleted: {
     restartWindowStarted = Date.now()
-    startHelper()
+    probeNextRoot()
   }
 
   Component.onDestruction: {

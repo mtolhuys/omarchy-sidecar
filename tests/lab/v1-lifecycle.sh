@@ -111,6 +111,7 @@ omarchy_host_test() {
   qmp_pointer_tap "$screen_width" "$screen_height" "$((icon_x + 25))" 123 left
   wait_for_guest_state "rendered Open inbox control reveals the local fixed directory" 15 ssh_session "hyprctl -j clients | jq -e 'any(.[]; ((.class // \"\") | test(\"nautilus\"; \"i\")) and ((.title // \"\") | contains(\"Sidecar\")))'" || {
     capture_console "failure-sidecar-v1013-open-inbox-coordinate"
+    ssh_session "hyprctl -j clients | jq -c '.[] | {class, title}'; pgrep -af '[n]autilus|[x]dg-open' ; xdg-mime query default inode/directory; \"$plugin_dir/helper/sidecarctl\" status | jq -c '{state, inbox}'; journalctl --user --since '-2 minutes' --no-pager | grep -i -E 'sidecar|nautilus|xdg|inbox' | tail -n 40" || true
     return 1
   }
   capture_console "success-sidecar-v1013-04-local-reveal"
