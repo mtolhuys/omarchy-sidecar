@@ -1,8 +1,8 @@
-# omakit block: store 0.1.0
+# omakit block: store 0.2.0
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Maarten Tolhuijs
-# Source: omakit blocks/store/store-helper.py, commit 4188f9f12535847af263acfb25e33d162753c2c4
-# Body sha256: cec3fcc9573ce7c12f1365e106cc65a936e213553bfe4e3128e8a87eea511dc5
+# Source: omakit blocks/store/store-helper.py, commit f41b8671d74dc4caa92b28a3dd56118d264be446
+# Body sha256: 2dd4d6ad308bbed473936c29844793411d8849415812b96ca5e7a6688097e37c
 # end of omakit block header
 #
 # The helper behind Store.qml, started through the Run block as
@@ -13,9 +13,11 @@
 # O_NOFOLLOW and O_DIRECTORY, checked on its descriptor to be a directory
 # owned by this user and writable by nobody else, created with mode 0700
 # where missing. Every file is opened relative to that descriptor with
-# O_NOFOLLOW and checked the same way after the open, never before it. A
-# read is capped in bytes and parsed against a schema; a write goes to an
-# exclusive 0600 staging file and is renamed into place. The shape is the
+# O_NOFOLLOW and O_NONBLOCK (a FIFO is refused, never waited on) and
+# checked the same way after the open, never before it. A read is capped
+# in bytes and parsed against a schema; a write goes to an exclusive 0600
+# staging file, every byte written and fsynced before the rename, or the
+# staging file is unlinked and the write fails. The shape is the
 # catalog cache transaction of omarchy-theme-manager 0.5.15, which the
 # marketplace review read without a further file or state comment. One
 # JSON line on stdout is the result; docs/BLOCKS.md is the contract.
@@ -49,8 +51,20 @@ class Overflow(Exception):
     """The file, or the value to write, is over the cap."""
 
 
+MAX_NESTING = 64
+
+
+def nesting(value, depth=0):
+    """How deep a JSON value nests; past MAX_NESTING it stops counting, which is enough to refuse it."""
+    if depth > MAX_NESTING or not isinstance(value, (dict, list)):
+        return depth
+    members = value.values() if isinstance(value, dict) else value
+    return max([depth] + [nesting(member, depth + 1) for member in members])
+
+
 def emit(obj):
-    sys.stdout.write(json.dumps(obj, ensure_ascii=True, sort_keys=True) + "\n")
+    """One UTF-8 line: the value as it is, never \\u-escaped into more bytes than the file holds."""
+    sys.stdout.buffer.write(json.dumps(obj, ensure_ascii=False, sort_keys=True).encode("utf-8", "surrogatepass") + b"\n")
     sys.stdout.flush()
 
 
@@ -77,6 +91,19 @@ def check_options(opts):
             raise Refused("%s is not a safe name: %r" % (key, opts.get(key, "")))
     if not opts["max_bytes"].isdigit() or int(opts["max_bytes"]) < 1:
         raise Refused("max-bytes must be a positive integer")
+
+
+def check_schema(schema):
+    """The schema is the documented subset in shape: an object whose keywords carry the right kinds, all the way down."""
+    if not isinstance(schema, dict):
+        raise Refused("schema is not an object")
+    kinds = {"type": str, "properties": dict, "required": list, "additionalProperties": bool, "items": dict, "enum": list,
+             "maxLength": int, "maxItems": int, "maxProperties": int, "minimum": (int, float), "maximum": (int, float), "pattern": str}
+    for key, value in schema.items():
+        if key not in kinds or not isinstance(value, kinds[key]) or (isinstance(value, bool) and kinds[key] is not bool):
+            raise Refused("schema keyword %r is not in the supported subset, or its value is of the wrong kind" % key)
+    for member in list(schema.get("properties", {}).values()) + ([schema["items"]] if "items" in schema else []):
+        check_schema(member)
 
 
 def verify_owned(fd, label, directory):
@@ -149,10 +176,15 @@ def open_private_directory(kind, plugin, environ=None):
     """
     home, base, components = base_components(kind, os.environ if environ is None else environ)
     fds = [open_no_follow(home, DIRECTORY_FLAGS, None, "HOME")]
-    verify_owned(fds[0], "HOME", True)
-    for part in components:
-        fds.append(open_child_directory(fds[-1], part, "the %s directory" % kind, True))
-    fds.append(open_child_directory(fds[-1], plugin, "the plugin's %s directory" % kind, True))
+    try:
+        verify_owned(fds[0], "HOME", True)
+        for part in components:
+            fds.append(open_child_directory(fds[-1], part, "the %s directory" % kind, True))
+        fds.append(open_child_directory(fds[-1], plugin, "the plugin's %s directory" % kind, True))
+    except BaseException:
+        for fd in fds:            # a refusal partway leaves nothing open behind an importer
+            os.close(fd)
+        raise
     return fds, os.path.join(base, plugin)
 
 
@@ -232,19 +264,34 @@ def parse_value(data, schema):
         value = json.loads(data.decode("utf-8"), parse_constant=lambda token: (_ for _ in ()).throw(ValueError(token)))
     except (UnicodeDecodeError, ValueError) as error:
         raise Invalid("not valid JSON: %s" % error) from None
+    except RecursionError:
+        raise Invalid("nested deeper than the parser follows") from None
+    if nesting(value) > MAX_NESTING:
+        raise Invalid("nested deeper than %d levels" % MAX_NESTING)
     problem = schema_problem(value, schema, "value") if schema else None
     if problem:
         raise Invalid(problem)
     return value
 
 
+def open_regular(dir_fd, name):
+    """The file by descriptor: opened without blocking (a FIFO opens at once instead of waiting for a writer), checked to be a regular file that is ours, and only then made blocking."""
+    fd = open_no_follow(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC, dir_fd, name)
+    try:
+        info = verify_owned(fd, name, False)
+        os.set_blocking(fd, True)
+    except BaseException:
+        os.close(fd)
+        raise
+    return fd, info
+
+
 def read_file(dir_fd, name, maximum, schema):
     try:
-        fd = open_no_follow(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd, name)
+        fd, info = open_regular(dir_fd, name)
     except FileNotFoundError:
         return {"state": "missing"}
     try:
-        info = verify_owned(fd, name, False)
         data = read_capped(fd, maximum)
     finally:
         os.close(fd)
@@ -287,6 +334,16 @@ def create_staging(dir_fd):
     raise Refused("could not create an exclusive staging file")
 
 
+def write_all(fd, data):
+    """Every byte, or an error: a short write (a quota, a full disk, a size limit) never leaves a partial staging file to rename."""
+    written = 0
+    while written < len(data):
+        count = os.write(fd, data[written:])
+        if count <= 0:
+            raise OSError(errno.ENOSPC, "short write: %d of %d bytes" % (written, len(data)))
+        written += count
+
+
 def write_file(dir_fd, name, maximum, schema, raw):
     data = json.dumps(parse_value(raw.encode("utf-8"), schema), ensure_ascii=False, sort_keys=True, indent=1).encode("utf-8") + b"\n"
     if len(data) > maximum:
@@ -294,7 +351,7 @@ def write_file(dir_fd, name, maximum, schema, raw):
     sweep_staging(dir_fd)
     staging, fd = create_staging(dir_fd)
     try:
-        os.write(fd, data)
+        write_all(fd, data)
         os.fsync(fd)
         os.rename(staging, name, src_dir_fd=dir_fd, dst_dir_fd=dir_fd)
         staging = None
@@ -302,7 +359,7 @@ def write_file(dir_fd, name, maximum, schema, raw):
     finally:
         os.close(fd)
         if staging:
-            os.unlink(staging, dir_fd=dir_fd)
+            unlink_quietly(dir_fd, staging)
     return {"state": "ok", "bytes": len(data)}
 
 
@@ -315,9 +372,23 @@ def remove_file(dir_fd, name):
     return {"state": "ok"}
 
 
+def parse_schema(text):
+    """The schema argument: JSON, the supported subset in shape, at most 64 KiB, or None."""
+    if not text:
+        return None
+    if len(text.encode("utf-8")) > 65536:
+        raise Refused("schema is over 65536 bytes")
+    try:
+        schema = json.loads(text)
+    except (ValueError, RecursionError) as error:
+        raise Refused("schema is not valid JSON: %s" % error) from None
+    check_schema(schema)
+    return schema
+
+
 def operate(opts, environ=None):
     check_options(opts)
-    schema = json.loads(opts["schema"]) if opts.get("schema") else None
+    schema = parse_schema(opts.get("schema"))
     fds, path = open_private_directory(opts["kind"], opts["plugin"], environ)
     try:
         if opts["op"] == "read":
@@ -345,6 +416,8 @@ def result_of(opts, environ=None):
         result = {"state": "overflow", "reason": str(why)}
     except (OSError, ValueError) as why:
         result = {"state": "failed", "reason": "%s: %s" % (type(why).__name__, why)}
+    except RecursionError:
+        result = {"state": "invalid", "reason": "nested deeper than the check follows"}
     return dict(result, op=opts["op"])
 
 

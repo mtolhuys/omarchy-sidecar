@@ -1,8 +1,8 @@
-// omakit block: store 0.1.0
+// omakit block: store 0.2.0
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Maarten Tolhuijs
-// Source: omakit blocks/store/Store.qml, commit eb95b39b196e61e592cb9b703600f2bc37ee381a
-// Body sha256: c71b5646e0b6ccc4b45e5c57a8c7ed08a089319f4ee7d3ce74ef5e28d8af3801
+// Source: omakit blocks/store/Store.qml, commit f41b8671d74dc4caa92b28a3dd56118d264be446
+// Body sha256: 6fafd2ec98b4d4fe18ead2ae1f1221386e9714eb9a33ef0f1b9cf48520f2c743
 // end of omakit block header
 //
 // Store: one private file for a plugin, read and written the way the
@@ -52,9 +52,10 @@ QtObject {
     signal finished(var result)
 
     // A write goes to the helper as one argument; the kernel bounds one
-    // argument at 128 KiB, so a write is refused above this before anything
-    // starts. A cache a helper of the plugin downloads itself uses the
-    // helper's own transaction; Store is for the plugin's state.
+    // argument at 128 KiB, so a write is refused above this many UTF-8
+    // bytes before anything starts, and so is a schema. A cache a helper of
+    // the plugin downloads itself uses the helper's own transaction; Store
+    // is for the plugin's state.
     readonly property int maxWriteBytes: 65536
     readonly property string helper: decodeURIComponent(Qt.resolvedUrl("store-helper.py").toString().replace(/^file:\/\//, ""))
     property var _queue: []
@@ -76,8 +77,21 @@ QtObject {
         let text
         try { text = JSON.stringify(value) } catch (error) { _report({ op: "write", state: "invalid", reason: "the value is not JSON: " + error }); return }
         if (typeof text !== "string") { _report({ op: "write", state: "invalid", reason: "the value is undefined" }); return }
-        if (text.length > maxWriteBytes) { _report({ op: "write", state: "overflow", reason: "the value is " + text.length + " characters, over " + maxWriteBytes }); return }
+        const bytes = _utf8Bytes(text)
+        if (bytes < 0) { _report({ op: "write", state: "invalid", reason: "the value holds a lone surrogate" }); return }
+        if (bytes > maxWriteBytes) { _report({ op: "write", state: "overflow", reason: "the value is " + bytes + " bytes, over " + maxWriteBytes }); return }
         _enqueue({ op: "write", value: text })
+    }
+
+    // UTF-8 bytes of a string, counted the way the kernel counts an argument; -1 for a lone surrogate.
+    function _utf8Bytes(text) {
+        try { return encodeURIComponent(text).replace(/%[0-9A-F]{2}/g, ".").length } catch (error) { return -1 }
+    }
+
+    function _schemaText() {
+        if (!schema) return null
+        const text = JSON.stringify(schema)
+        return typeof text === "string" && _utf8Bytes(text) > 0 && _utf8Bytes(text) <= maxWriteBytes ? text : ""
     }
 
     function _enqueue(operation) {
@@ -89,13 +103,15 @@ QtObject {
         if (_helper.running || _queue.length === 0) return
         _current = _queue[0]
         _queue = _queue.slice(1)
-        _helper.command = _argv(_current)
+        const schemaText = _schemaText()
+        if (schemaText === "") { _onHelper({ state: "spawn-failed", reason: "the schema is not a JSON object under " + maxWriteBytes + " bytes" }); return }
+        _helper.command = _argv(_current, schemaText)
         _helper.start()
     }
 
-    function _argv(operation) {
+    function _argv(operation, schemaText) {
         const argv = ["/usr/bin/python3", "-I", "-S", "-B", helper, operation.op, "--kind", kind, "--plugin", pluginId, "--name", name, "--max-bytes", String(maxBytes)]
-        if (schema) argv.push("--schema", JSON.stringify(schema))
+        if (schemaText) argv.push("--schema", schemaText)
         if (operation.op === "write") argv.push("--value", operation.value)
         return argv
     }
